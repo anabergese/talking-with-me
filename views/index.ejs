@@ -75,27 +75,30 @@
         })
         .then(response => response.json())
         .then(data => {
-          console.log('Server response:', data);
+            console.log('Server response data:', data); // Log the response data
+            // Update the HTML content based on the response data
+            if (data.transcriptionresult) {
+            document.getElementById('transcriptionResult').innerText = data.transcriptionresult;
+            } else {
+            document.getElementById('transcriptionResult').innerText = 'No transcription yet';
+            }
+            if (data.processedresult) {
+            document.getElementById('processedResult').innerText = data.processedresult;
+            } else {
+            document.getElementById('processedResult').innerText = 'No text processed yet';
+            }
         })
         .catch(error => {
-          console.error('Error sending audio:', error);
+            console.error('Error sending audio:', error);
         });
       }
     });
   });
 </script>
 
-<% if (locals.transcriptionresult) { %>
-    <p><%= locals.transcriptionresult %></p>
-<% } else { %> 
-    <h1>No transcription yet</h1>
-<% } %> 
-
-<% if (locals.processedresult) { %>
-    <p><%= locals.processedresult %></p>
-<% } else { %> 
-    <h1>No text processed yet</h1>
-<% } %> 
+<!-- Placeholders for displaying results -->
+<p id="transcriptionResult">No transcription yet</p>
+<p id="processedResult">No text processed yet</p>
 
 </body>
 </html>

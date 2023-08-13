@@ -1,6 +1,5 @@
 import fetch from 'node-fetch';
 
-
 export async function gptProcess(inputText) {
   const API_TOKEN = 'Bearer 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';
   const TRANSCRIPT_API_URL = 'https://api.openai.com/v1/completions';
@@ -13,9 +12,10 @@ export async function gptProcess(inputText) {
 
   const requestBody = {
     "model": "text-davinci-003",
-    "prompt": "Hello, what is a day?",
+    "prompt": `Minimum length: 50 characters. Maximum length: 300 characters: ${inputText}`,
     "suffix": "\n// Finish",
     "temperature": 0.5,
+    "max_tokens": 256,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
