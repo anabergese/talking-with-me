@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/styles/home.css">
+<title>Audio Recording</title>
+</head>
+<body>
+    <h1>Transcript Audio to Text</h1>
+<div id="controls">
+  <button id="startRecording">Start Recording</button>
+  <button id="stopRecording" disabled>Stop Recording</button>
+  <button id="sendRecording" disabled>Send Recording</button>
+</div>
+<audio id="audioPlayer" controls style="display: none;"></audio>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const startButton = document.getElementById('startRecording');
+    const stopButton = document.getElementById('stopRecording');
+    const sendButton = document.getElementById('sendRecording');
+
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    let mediaRecorder;
+    let recordedChunks = [];
+
+    startButton.addEventListener('click', async () => {
+      recordedChunks = [];
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = event => {
+          if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          audioPlayer.src = audioUrl;
+          audioPlayer.style.display = 'block';
+          audioPlayer.play();
+        };
+
+        mediaRecorder.start();
+        startButton.disabled = true;
+        stopButton.disabled = false;
+        sendButton.disabled = false;
+
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+      }
+    });
+
+    stopButton.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      }
+    });
+    sendButton.addEventListener('click', async () => {
+      if (audioPlayer.src) {
+        const audioBlob = await fetch(audioPlayer.src).then(response => response.blob());
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+
+        fetch('/upload', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Server response:', data);
+        })
+        .catch(error => {
+          console.error('Error sending audio:', error);
+        });
+      }
+    });
+  });
+</script>
+
+<% if (locals.transcriptionresult) { %>
+    <p><%= locals.transcriptionresult %></p>
+<% } else { %> 
+    <h1>No transcription yet</h1>
+<% } %> 
+
+<% if (locals.processedresult) { %>
+    <p><%= locals.processedresult %></p>
+<% } else { %> 
+    <h1>No text processed yet</h1>
+<% } %> 
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: brown;
+    color: white;
+  }
+  #controls {
+    margin-bottom: 20px;
+  }
+  audio {
+    margin-top: 10px;
+    width: 100%;
+  }
