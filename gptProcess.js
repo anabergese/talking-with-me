@@ -12,7 +12,7 @@ export async function gptProcess(inputText) {
 
   const requestBody = {
     "model": "text-davinci-003",
-    "prompt": `Minimum length: 50 characters. Maximum length: 300 characters: ${inputText}`,
+    "prompt": `Minimum length: 50 characters. Maximum length: 300 characters. You are an artificial assistant for people that is alone, please, answer: ${inputText}`,
     "suffix": "\n// Finish",
     "temperature": 0.5,
     "max_tokens": 256,
@@ -39,6 +39,6 @@ export async function gptProcess(inputText) {
   const responseGPT = await response.json();
   
   // Extract and return the generated text from the response
-  console.log(responseGPT.choices[0].text.trim());
+  // console.log(responseGPT.choices[0].text.trim());
   return responseGPT.choices[0].text.trim();
 }

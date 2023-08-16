@@ -1,10 +1,8 @@
 import express from 'express';
 import multer from 'multer';
 import fetch from 'node-fetch';
-import { Readable } from 'stream';
-import fs from 'fs';
-import { processTranscription } from './gptProcessing.js'; // Import the processTranscription function
-
+import { processTranscription } from './gptProcessing.js';
+import {convertTextToSpeech} from './textToSpeech.js'
 const app = express();
 const port = 3000;
 
@@ -24,22 +22,30 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
   try {
     const audioBuffer = req.file.buffer;
-    const transcriptionResult = await transcribeAudio(audioBuffer);
 
-    // You can handle the transcription result here
-    console.log('Transcription result:', transcriptionResult);
-    
     // Process the transcription result using the external function of GPT
-   const processedResult = await processTranscription(transcriptionResult);
+    const transcriptionResult = await transcribeAudio(audioBuffer);
+    const processedResult = await processTranscription(transcriptionResult);
+    //console.log('Transcription result:', transcriptionResult);
+    //console.log('Processed result:', processedResult);
 
-   // Handle the processed result as needed
-   console.log('Processed result:', processedResult);
 
-   // Send the JSON response along with the data needed for rendering the template
+   // **** START Call the convertTextToSpeech function
+   convertTextToSpeech(processedResult)
+   .then(audioContent => {
+     // Handle the audio content, e.g., play it in an audio element
+     console.log("audiocontent:", audioContent);
+   })
+   .catch(error => {
+     console.error('Error generating speech:', error);
+   });
+   // ***** END Call the convertTextToSpeech function
+
+   // Send the JSON response to frontend
     res.json({
         message: 'Audio uploaded and transcribed successfully',
         processedresult: processedResult,
-        transcriptionresult: transcriptionResult
+        transcriptionresult: transcriptionResult,
       });
        
   } catch (error) {

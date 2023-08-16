@@ -7,6 +7,7 @@
 <title>Audio Recording</title>
 </head>
 <body>
+
     <h1>Transcript Audio to Text</h1>
 <div id="controls">
   <button id="startRecording">Start Recording</button>
@@ -14,13 +15,14 @@
   <button id="sendRecording" disabled>Send Recording</button>
 </div>
 <audio id="audioPlayer" controls style="display: none;"></audio>
+<audio id="audiocontentido" controls></audio>
+
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
     const sendButton = document.getElementById('sendRecording');
-
     const audioPlayer = document.getElementById('audioPlayer');
 
     let mediaRecorder;
@@ -55,7 +57,6 @@
         console.error('Error accessing microphone:', error);
       }
     });
-
     stopButton.addEventListener('click', () => {
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
@@ -75,13 +76,14 @@
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Server response data:', data); // Log the response data
+            //console.log('Server response data:', data); // Log the response data
             // Update the HTML content based on the response data
             if (data.transcriptionresult) {
             document.getElementById('transcriptionResult').innerText = data.transcriptionresult;
             } else {
             document.getElementById('transcriptionResult').innerText = 'No transcription yet';
             }
+
             if (data.processedresult) {
             document.getElementById('processedResult').innerText = data.processedresult;
             } else {
@@ -99,6 +101,5 @@
 <!-- Placeholders for displaying results -->
 <p id="transcriptionResult">No transcription yet</p>
 <p id="processedResult">No text processed yet</p>
-
 </body>
 </html>
