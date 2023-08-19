@@ -18,8 +18,14 @@ async function convertTextToSpeech(inputText) {
 
   // Manage the response
   const [response] = await client.synthesizeSpeech(request);
-  const writeFile = util.promisify(fs.writeFile);
-  await writeFile("output.mp3", response.audioContent, "binary");
+  // Convert the audio content to a base64-encoded string
+  const audioContentBase64 = response.audioContent.toString('base64');
+
+  // Create an HTML <audio> element with the base64-encoded audio content
+  const audioElement = `<audio controls><source src="data:audio/mpeg;base64,${audioContentBase64}" type="audio/mpeg"></audio>`;
+  return audioElement;
+  // const writeFile = util.promisify(fs.writeFile);
+  // await writeFile("output.mp3", response.audioContent, "binary");
 
   console.log("Text To Speech has completed. Audio File has been saved.");
 

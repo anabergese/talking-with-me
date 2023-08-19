@@ -15,16 +15,13 @@
   <button id="sendRecording" disabled>Send Recording</button>
 </div>
 <audio id="audioPlayer" controls style="display: none;"></audio>
-<audio id="audiocontentido" controls></audio>
-
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
     const sendButton = document.getElementById('sendRecording');
-    const audioPlayer = document.getElementById('audioPlayer');
-
+    
     let mediaRecorder;
     let recordedChunks = [];
 
@@ -76,7 +73,6 @@
         })
         .then(response => response.json())
         .then(data => {
-            //console.log('Server response data:', data); // Log the response data
             // Update the HTML content based on the response data
             if (data.transcriptionresult) {
             document.getElementById('transcriptionResult').innerText = data.transcriptionresult;
@@ -88,6 +84,12 @@
             document.getElementById('processedResult').innerText = data.processedresult;
             } else {
             document.getElementById('processedResult').innerText = 'No text processed yet';
+            }
+
+            if (data.audiocontent) {
+              document.getElementById('audioContainer').innerHTML = data.audiocontent;
+            } else {
+              document.getElementById('audioContainer').innerText = 'No audio processed - error';
             }
         })
         .catch(error => {
@@ -101,5 +103,7 @@
 <!-- Placeholders for displaying results -->
 <p id="transcriptionResult">No transcription yet</p>
 <p id="processedResult">No text processed yet</p>
+<div id="audioContainer"></div>
+
 </body>
 </html>

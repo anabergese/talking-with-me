@@ -22,30 +22,17 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
   try {
     const audioBuffer = req.file.buffer;
-
     // Process the transcription result using the external function of GPT
     const transcriptionResult = await transcribeAudio(audioBuffer);
     const processedResult = await processTranscription(transcriptionResult);
-    //console.log('Transcription result:', transcriptionResult);
-    //console.log('Processed result:', processedResult);
-
-
-   // **** START Call the convertTextToSpeech function
-   convertTextToSpeech(processedResult)
-   .then(audioContent => {
-     // Handle the audio content, e.g., play it in an audio element
-     console.log("audiocontent:", audioContent);
-   })
-   .catch(error => {
-     console.error('Error generating speech:', error);
-   });
-   // ***** END Call the convertTextToSpeech function
+    const audioTag = await convertTextToSpeech(processedResult);
+    console.log("audioTag:", audioTag)
 
    // Send the JSON response to frontend
     res.json({
-        message: 'Audio uploaded and transcribed successfully',
         processedresult: processedResult,
         transcriptionresult: transcriptionResult,
+        audiocontent: audioTag
       });
        
   } catch (error) {
