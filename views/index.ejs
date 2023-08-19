@@ -8,11 +8,15 @@
 </head>
 <body>
 
-    <h1>Transcript Audio to Text</h1>
-<div id="controls">
-  <button id="startRecording">Start Recording</button>
-  <button id="stopRecording" disabled>Stop Recording</button>
-  <button id="sendRecording" disabled>Send Recording</button>
+<div id="app">
+  <div id="gifContainer">  
+    <div id="audioContainer"></div>
+  </div>
+  <div id="controls">
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording" disabled>Stop Recording</button>
+    <button id="sendRecording" disabled>Send Recording</button>
+  </div>
 </div>
 
 <script>
@@ -74,23 +78,11 @@
         .then(response => response.json())
         .then(data => {
             // Update the HTML content based on the response data
-            if (data.transcriptionresult) {
-            document.getElementById('transcriptionResult').innerText = data.transcriptionresult;
-            } else {
-            document.getElementById('transcriptionResult').innerText = 'No transcription yet';
-            }
-
-            if (data.processedresult) {
-            document.getElementById('processedResult').innerText = data.processedresult;
-            } else {
-            document.getElementById('processedResult').innerText = 'No text processed yet';
-            }
-
             if (data.audiocontent) {
               document.getElementById('audioContainer').innerHTML = data.audiocontent;
-              document.getElementById('audioContainer').play();
+              document.getElementById('audioHTMLtag').play();
             } else {
-              document.getElementById('audioContainer').innerText = 'No audio processed - error';
+              console.lg('No audio processed - error');
             }
         })
         .catch(error => {
@@ -100,11 +92,5 @@
     });
   });
 </script>
-
-<!-- Placeholders for displaying results -->
-<p id="transcriptionResult">No transcription yet</p>
-<p id="processedResult">No text processed yet</p>
-<div id="audioContainer"></div>
-
 </body>
 </html>
