@@ -26,9 +26,6 @@ async function convertTextToSpeech(inputText) {
   return audioElement;
   // const writeFile = util.promisify(fs.writeFile);
   // await writeFile("output.mp3", response.audioContent, "binary");
-
-  console.log("Text To Speech has completed. Audio File has been saved.");
-
 }
 
 export { convertTextToSpeech }; 

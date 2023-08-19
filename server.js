@@ -26,7 +26,6 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     const transcriptionResult = await transcribeAudio(audioBuffer);
     const processedResult = await processTranscription(transcriptionResult);
     const audioTag = await convertTextToSpeech(processedResult);
-    console.log("audioTag:", audioTag)
 
    // Send the JSON response to frontend
     res.json({
