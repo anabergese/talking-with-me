@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #747ABE;
     color: white;
+    margin: 0;
   }
 
   #app {
@@ -18,10 +18,9 @@ body {
     align-items: center;
     justify-content: center;
     background-image: url('https://ih1.redbubble.net/image.4341290820.1829/raf,360x360,075,t,fafafa:ca443f4786.jpg');
-   
-    /* background-size: cover; */
     background-position: center;
     background-repeat: no-repeat;
+    background-size: contain;
     width: 100%;
     height: 100%; /* Adjust to your preference */
     margin-bottom: 20px; /* Space between audioContainer and controls */
@@ -31,7 +30,7 @@ body {
     width: 4%;
     border-radius: 8px;
     position: relative; /* Set the position to relative */
-    top: 20px; /* Adjust the value to move the image down */
+    top: 26px; /* Adjust the value to move the image down */
     /*  right: 100px; Adjust the value to move the image to the left */
     filter: brightness(0.2) saturate(1.5) sepia(0.2) hue-rotate(80deg);
     opacity: 0.85;
@@ -66,3 +65,11 @@ body {
   .disable, svg:hover {
     filter: brightness(0.5);
    }
+
+
+   @media only screen and (max-width: 600px) {
+    #gifContainer img {
+      width: 12%;
+      top: 26px;
+    }
+  }
