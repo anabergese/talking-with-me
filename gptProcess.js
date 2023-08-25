@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 export async function gptProcess(inputText) {
-  const API_TOKEN = 'Bearer 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';
+  const API_TOKEN = 'Bearer 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';
   const TRANSCRIPT_API_URL = 'https://api.openai.com/v1/completions';
 
   const headers = {

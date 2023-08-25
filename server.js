@@ -24,6 +24,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
     const audioBuffer = req.file.buffer;
     // Process the transcription result using the external function of GPT
     const transcriptionResult = await transcribeAudio(audioBuffer);
+    console.log("transcriptionResult:", transcriptionResult)
     const processedResult = await processTranscription(transcriptionResult);
     const audioTag = await convertTextToSpeech(processedResult);
 
