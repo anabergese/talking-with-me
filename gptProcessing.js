@@ -23,7 +23,7 @@ export async function processTranscription(transcriptionResult) {
     ]
   };
 
-// Call the GPT API to process the input text
+// Call the GPT API 
   const response = await fetch(TRANSCRIPT_API_URL, {
     method: 'POST',
     headers: headers,
@@ -34,12 +34,9 @@ export async function processTranscription(transcriptionResult) {
     throw new Error(`GPT request failed with status ${response.status}`);
   }
 
-  // Retrieve the ID of the transcript from the response data
   const responseGPT = await response.json();
-    // Extract and return the generated text from the response
+  // Extract and return the generated text from the response
   const processedResult = responseGPT.choices[0].text.trim();
-
-
 
   return processedResult;
 }
