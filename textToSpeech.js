@@ -1,8 +1,4 @@
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 // Instantiates a client
 const client = new TextToSpeechClient();
