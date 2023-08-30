@@ -3,11 +3,14 @@ import multer from 'multer';
 import fetch from 'node-fetch';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToSpeech.js'
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
 const app = express();
 const port = 3000;
-
 app.use(express.static('public'));
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 

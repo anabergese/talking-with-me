@@ -1,11 +1,10 @@
 import fetch from 'node-fetch';
-const API_TOKEN = 'Bearer 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';
 const TRANSCRIPT_API_URL = 'https://api.openai.com/v1/completions';
 
 export async function processTranscription(transcriptionResult) {
   // Process the transcriptionResult using the GPT API
   const headers = {
-    Authorization: API_TOKEN,
+    Authorization: `Bearer ${process.env.GPT_TOKEN}`,
     "Content-Type": "application/json"
   };
 

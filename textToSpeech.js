@@ -1,7 +1,5 @@
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import dotenv from 'dotenv';
-import fs from 'fs/promises';
-import util from "util";
 
 // Load environment variables
 dotenv.config();
