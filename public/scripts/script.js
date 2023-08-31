@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
       svg.style.display = "none";
        // Set the GIF as inner HTML
       const gifURL = "https://i.gifer.com/origin/17/17b79d4cc4204635eaa22c3a66112c1a_w200.gif";
-      startButton.innerHTML = `<img src="${gifURL}" id="startButton_gif" alt="Recording GIF" width="80" height="80">`;
+      startButton.innerHTML = `<img src=${gifURL} id="startButton_gif" alt="Recording GIF" width="80" height="80">`;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
