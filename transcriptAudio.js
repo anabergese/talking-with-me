@@ -21,15 +21,14 @@ async function upload_file(apiToken, audioBuffer) {
   
 
 export async function transcribeAudio(audioBuffer) {
-    const API_TOKEN = '5c28abddbf97426b9d190d22e94ee263';
     const TRANSCRIPT_API_URL = 'https://api.assemblyai.com/v2/transcript';
   
     const headers = {
-      Authorization: API_TOKEN,
+      Authorization: process.env.ASSEMBLYAI_API_KEY,
     };
   
    // Upload the audio buffer to AssemblyAI and get the upload URL
-    const uploadUrl = await upload_file(API_TOKEN, audioBuffer);
+    const uploadUrl = await upload_file(process.env.ASSEMBLYAI_API_KEY, audioBuffer);
   
     if (!uploadUrl) {
       throw new Error('Audio upload failed');
