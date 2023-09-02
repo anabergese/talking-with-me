@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        //mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm; codecs=pcm' });
 
         mediaRecorder.ondataavailable = event => {
           if (event.data.size > 0) {
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         mediaRecorder.onstop = () => {
-          const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+          audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
           audioUrl = URL.createObjectURL(audioBlob);
           return audioUrl;
         };
@@ -87,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 sendButton.style.visibility = "hidden";
               });
             } else {
-              console.lg('No audio processed - error');
+              console.log('No audio processed - error');
             }
         })
         .catch(error => {
