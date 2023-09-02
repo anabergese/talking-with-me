@@ -66,8 +66,6 @@ document.addEventListener('DOMContentLoaded', function () {
         startButton.disabled = true;
         stopButton.style.visibility = "visible";
        
-        // stopButton.disabled = false;
-
       } catch (error) {
         console.error('Error accessing microphone:', error);
       }

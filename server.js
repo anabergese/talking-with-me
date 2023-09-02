@@ -1,12 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-import { transcribeAudio } from './gptTranscript.js';
+import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToSpeech.js'
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const port = 3000;
@@ -31,8 +27,7 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
 
   try {
     //const audioBuffer = req.file.buffer;
-    // Process the transcription result using the external function of GPT
-    const transcriptionResult = await transcribeAudio();
+    const transcriptionResult = await convertSpeechToText();
     console.log("transcriptionResult.text:", transcriptionResult.text)
     const processedResult = await processTranscription(transcriptionResult.text);
     const audioTag = await convertTextToSpeech(processedResult);

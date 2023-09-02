@@ -1,13 +1,4 @@
-import OpenAI from 'openai';
-import dotenv from 'dotenv';
-
-// Load environment variables this code is duplicated also in server.js
-dotenv.config();
-const apikeygpt = process.env.OPENAI_API_KEY;
-const openai = new OpenAI({
-  apiKey: apikeygpt
-});
-
+import { openai } from './config.js'; 
 
 export async function processTranscription(transcriptionResult){
   const completion = await openai.completions.create({
