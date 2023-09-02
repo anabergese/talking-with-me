@@ -23,6 +23,6 @@ export async function processTranscription(transcriptionResult){
       "\n// Finish"
     ]
   });
-  console.log(completion.choices[0].text);
+  console.log("from gptProcessing:", completion.choices[0].text);
   return completion.choices[0].text;
 }

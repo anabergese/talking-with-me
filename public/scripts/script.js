@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        //mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm; codecs=pcm' });
+        mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.ondataavailable = event => {
           if (event.data.size > 0) {
@@ -30,8 +29,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
         mediaRecorder.onstop = () => {
           audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
-          audioUrl = URL.createObjectURL(audioBlob);
-          return audioUrl;
+           // Create a FormData object to send the audio data to the server
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+
+        // Send the audio data to the server
+        fetch('/upload', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("data.audiocontent from script.js:", data.audiocontent); // You can handle the server's response here
+               // Update the HTML content based on the response data
+               if (data.audiocontent) {
+                const gifImage = document.querySelector('#gifContainer img');
+                gifImage.style.display = 'block';
+                document.getElementById('audioContainer').innerHTML = data.audiocontent;
+                document.getElementById('audioHTMLtag').play();
+                document.getElementById('audioHTMLtag').addEventListener('ended', () => {
+                  // Hide the gifImage when audio playback is finished
+                  gifImage.style.display = 'none';
+                  startButton.innerHTML = mic_icon;
+                  stopButton.style.visibility = "hidden";
+                  sendButton.style.visibility = "hidden";
+                });
+              } else {
+                console.log('No audio processed - error');
+              }
+          })
+        .catch(error => {
+            console.error('Error uploading audio:', error);
+        });
+        
         };
 
         mediaRecorder.start();
