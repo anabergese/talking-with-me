@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const micIconImage = new Image();
     micIconImage.src = mic_iconURL;
 
+
     startButton.addEventListener('click', async () => {
       recordedChunks = [];
       mic_html.style.display = "none";
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('audioHTMLtag').addEventListener('ended', () => {
                   // Hide the gifImage when audio playback is finished
                   gifImage.style.display = 'none';
-                  startButton.innerHTML = `<img src=${mic_iconURL} alt="Mic icon" width="80" height="80">`;
+                  startButton.innerHTML = `<img src=${mic_iconURL} alt="microphone icon" width="80" height="80">`;
                   stopButton.style.visibility = "hidden";
                 });
               } else {
