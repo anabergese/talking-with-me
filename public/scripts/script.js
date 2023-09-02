@@ -3,14 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopButton = document.getElementById('stopRecording');
     const mic_html = document.getElementById('mic_icon');
     const mic_iconURL = "/images/mic.png"; 
-    const gifURL = "/images/audiorecording.gif";
+    const recordingURL = "/images/audiorecording.gif";
 
     let mediaRecorder;
     let recordedChunks = [];
 
     // Preload the GIF image
-    const gifImage = new Image();
-    gifImage.src = gifURL;
+    const recordingImage = new Image();
+    recordingImage.src = recordingURL;
 
     // Preload the mic_icon image
     const micIconImage = new Image();
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
       recordedChunks = [];
       mic_html.style.display = "none";
        // Set the GIF as inner HTML
-      startButton.innerHTML = `<img src=${gifURL} id="startButton_gif" alt="Recording GIF" width="80" height="80">`;
+      startButton.innerHTML = `<img src=${recordingURL} id="recording_audio_gif" alt="Recording GIF" width="80" height="80">`;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
               console.log("data.audiocontent from script.js:", data.audiocontent);
                 // Update the HTML content based on the response data
                 if (data.audiocontent) {
-                  const gifImage = document.querySelector('#gifContainer img');
-                  gifImage.style.display = 'block';
+                  const recordingImage = document.querySelector('#gifContainer img');
+                  recordingImage.style.display = 'block';
                   document.getElementById('audioContainer').innerHTML = data.audiocontent;
                   document.getElementById('audioHTMLtag').play();
                   document.getElementById('audioHTMLtag').addEventListener('ended', () => {
-                    // Hide the gifImage when audio playback is finished
-                    gifImage.style.display = 'none';
+                    // Hide the recordingImage when audio playback is finished
+                    recordingImage.style.display = 'none';
                     startButton.innerHTML = `<img src=${mic_iconURL} alt="microphone icon" width="80" height="80">`;
                     stopButton.style.visibility = "hidden";
                   });
@@ -79,14 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     stopButton.addEventListener('click', () => {
       if (mediaRecorder && mediaRecorder.state === 'recording') {
-        const startButton_gif = document.getElementById('startButton_gif');
-
+        const recording_audio_gif = document.getElementById('recording_audio_gif');
         mediaRecorder.stop();
         startButton.disabled = false;
         stopButton.disabled = true;
         stopButton.classList.add("disable");
-        startButton_gif.classList.add("hiden");
-        
+        recording_audio_gif.classList.add("hiden");   
       }
     });
 
