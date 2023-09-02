@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const recording_audio_gif = document.getElementById('recording_audio_gif');
         mediaRecorder.stop();
         startButton.disabled = false;
-        stopButton.disabled = true;
+        stopButton.disabled = false;
         stopButton.classList.add("disable");
         recording_audio_gif.classList.add("hiden");   
       }
