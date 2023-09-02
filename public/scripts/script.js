@@ -2,15 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
     const mic_html = document.getElementById('mic_icon');
+    const mic_iconURL = "/images/mic.png"; 
+    const gifURL = "/images/audiorecording.gif";
 
-    const mic_iconURL = "/images/mic.png"; // Replace with your mic_icon image path
-    const gifURL = "/images/audiorecording.gif"
-
-    // Hide the SVG
-    const svg = startButton.querySelector("svg");
     let mediaRecorder;
     let recordedChunks = [];
-    let audioUrl;
 
     // Preload the GIF image
     const gifImage = new Image();
