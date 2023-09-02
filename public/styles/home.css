@@ -45,8 +45,7 @@ body {
   }
   
   #startRecording,
-  #stopRecording,
-  #sendRecording {
+  #stopRecording {
     margin: 5px;
   }
   
