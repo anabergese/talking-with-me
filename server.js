@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.get('/', (req, res) => {
-  res.render('index.ejs');
+ res.render('index.ejs');
 });
 
 app.post('/upload', upload.single('audio'), async (req, res) => {
