@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
-import {convertTextToSpeech} from './textToSpeech.js'
+import {convertTextToSpeech} from './textToVoice.js'
 
 const app = express();
 const port = 3000;

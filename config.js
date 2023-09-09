@@ -7,4 +7,7 @@ const openai = new OpenAI({
   apiKey: apikeygpt,
 });
 
-export { openai };
+const keyElevenLab = process.env.ELEVENLAB_API_KEY;
+
+
+export { openai, keyElevenLab };
