@@ -17,7 +17,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-image: url('/images/assitantpic.jpeg');
+    background-image: url('/images/yo.jpeg');
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
@@ -27,13 +27,12 @@ body {
   }
   
   #gifContainer img {
-    width: 4%;
+    width: 5%;
     border-radius: 8px;
     position: relative; 
-    top: 26px; 
+    top: 21%; 
     filter: brightness(0.2) saturate(1.5) sepia(0.2) hue-rotate(80deg);
     opacity: 0.85;
-    
   }
   
   #controls {
