@@ -18,9 +18,9 @@ body {
     opacity: 0.90;
     position: absolute;
     bottom: 333px;
-    right: 118px;
-    width: 30%;
-    filter: brightness(109%) contrast(97%) hue-rotate(236deg) sepia(25%);
+    right: 70px;
+    width: 35%;
+    image-rendering: pixelated;
   }
 
   #processing_input{
@@ -29,6 +29,7 @@ body {
     bottom: 90px !important;
     left: 150px;
     width: 22% !important;
+    image-rendering: pixelated;
   }
 
   /* CONTROLS SECTION */
@@ -65,4 +66,24 @@ body {
 
    @media only screen and (max-width: 600px) {
     /* MOBILES */
+    #app{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #controls{
+      margin-top: 80vh;
+      margin-left: 0;
+    }
+
+    #gifContainer img {
+      bottom: 357px;
+      right: 9px;
+      width: 90%;
+    }
+
+    #recording_audio_gif{
+      width: 80px; 
+     }
   }

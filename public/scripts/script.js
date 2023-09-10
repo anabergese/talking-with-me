@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recordingURL = "/images/audiorecording.gif";
     const talking_gif = document.getElementById('talking_gif');
     const processing_input = document.getElementById('processing_input');
+    const backgroundVideo = document.getElementById('backgroundVideo');
 
     let mediaRecorder;
     let recordedChunks = [];
@@ -18,7 +19,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const micIconImage = new Image();
     micIconImage.src = mic_iconURL;
 
+    // BACKGROUND FOR MOBILES
+    if (/Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent)) {
+      const source = backgroundVideo.querySelector("source");
+      // Set the new source URL
+      const newSourceUrl = "/images/background_mobile.mp4"; 
+      // Replace with your desired source URL
+      source.setAttribute("src", newSourceUrl);
+      // Load the new source
+      console.log("mobile device");
 
+      backgroundVideo.load();
+    } else {
+        console.log("Desktop device");
+    }
+  
+
+
+    //BUTTONS EVENTS
     startButton.addEventListener('click', async () => {
       recordedChunks = [];
       mic_html.style.display = "none";
