@@ -24,4 +24,6 @@ Soft skills	:
 						
 Languages						
 - English, advanced- Spanish, mother tongue - Portuguese, beginner
+
+It is mandatory to answer with a maximum of 200 characters, it can be less but not more.
 `

@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
+    const waiting_gif = document.getElementById('thinking_gif');
+
     const mic_html = document.getElementById('mic_icon');
     const mic_iconURL = "/images/mic.png"; 
     const recordingURL = "/images/audiorecording.gif";
@@ -39,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const formData = new FormData();
           formData.append('audio', audioBlob);
 
+          // sacarg gif the background y poner gif the thinking
+          console.log("esperando respuesta")
+          waiting_gif.style.display = 'block';
+
+
           // Send the audio data to the server
           fetch('/upload', {
               method: 'POST',
@@ -46,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
           })
           .then(response => response.json())
           .then(data => {
-              console.log("data.audiocontent from script.js:", data.audiocontent);
                 // Update the HTML content based on the response data
                 if (data.audiocontent) {
                   const recordingImage = document.querySelector('#gifContainer img');
                   recordingImage.style.display = 'block';
                   document.getElementById('audioContainer').innerHTML = data.audiocontent;
+                  waiting_gif.style.display = 'none';
                   document.getElementById('audioHTMLtag').play();
                   document.getElementById('audioHTMLtag').addEventListener('ended', () => {
                     // Hide the recordingImage when audio playback is finished
