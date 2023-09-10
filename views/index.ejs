@@ -8,17 +8,20 @@
 </head>
 <body>
 <div id="app">
-  <h1>Ask something about me</h1>
+  <video autoplay muted id="backgroundVideo">
+    <source src="/images/background_desktop.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
   <div id="gifContainer">  
     <img src="/images/clonegif.gif" style="display: none;" alt="Audio wave">
     <p id="thinking_gif" style="display: none;">I am thinking...</p>
   </div> 
   <div id="controls">
     <button id="startRecording">
-      <img src="/images/mic.png" id="mic_icon" alt="microphone icon" width="80" height="80">
+      <img src="/images/mic.svg" id="mic_icon" alt="microphone icon" width="80" height="80">
     </button>
-    <button id="stopRecording" class="hiden">
-      <img src="/images/stop.png" alt="stop button icon" width="80" height="80">
+    <button id="stopRecording">
+      <img src="/images/stop.svg" alt="stop button icon" width="80" height="80">
     </button>
   </div>
 </div>
