@@ -1,16 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
-    const waiting_gif = document.getElementById('thinking_gif');
-
     const mic_html = document.getElementById('mic_icon');
-    const mic_iconURL = "/images/mic.png"; 
+    const mic_iconURL = "/images/mic.svg"; 
     const recordingURL = "/images/audiorecording.gif";
+    const talking_gif = document.getElementById('talking_gif');
+    const processing_input = document.getElementById('processing_input');
 
     let mediaRecorder;
     let recordedChunks = [];
 
-    // Preload the GIF image
+    // Preload the audio recording gif
     const recordingImage = new Image();
     recordingImage.src = recordingURL;
 
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
       recordedChunks = [];
       mic_html.style.display = "none";
        // Set the GIF as inner HTML
-      startButton.innerHTML = `<img src=${recordingURL} id="recording_audio_gif" alt="Recording GIF" width="80" height="80">`;
+      startButton.innerHTML = `<img src=${recordingURL} id="recording_audio_gif" alt="Recording GIF">`;
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -43,8 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // sacarg gif the background y poner gif the thinking
           console.log("esperando respuesta")
-          waiting_gif.style.display = 'block';
-
+          processing_input.style.display = 'block';
 
           // Send the audio data to the server
           fetch('/upload', {
@@ -54,17 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
           .then(response => response.json())
           .then(data => {
                 // Update the HTML content based on the response data
-                if (data.audiocontent) {
-                  const recordingImage = document.querySelector('#gifContainer img');
-                  recordingImage.style.display = 'block';
+                if (data.audiocontent) {         
+                  processing_input.style.display = 'none';
+                  talking_gif.style.display = 'block';
                   document.getElementById('audioContainer').innerHTML = data.audiocontent;
-                  waiting_gif.style.display = 'none';
                   document.getElementById('audioHTMLtag').play();
                   document.getElementById('audioHTMLtag').addEventListener('ended', () => {
-                    // Hide the recordingImage when audio playback is finished
-                    recordingImage.style.display = 'none';
-                    startButton.innerHTML = `<img src=${mic_iconURL} alt="microphone icon" width="80" height="80">`;
-                    stopButton.style.visibility = "hidden";
+                    // Hide the talking_gif when audio playback is finished
+                    talking_gif.style.display = 'none';
                   });
                 } else {
                   console.log('No audio processed - error');
@@ -85,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     stopButton.addEventListener('click', () => {
+      startButton.innerHTML = `<img src=${mic_iconURL} alt="microphone icon">`;
+
       if (mediaRecorder && mediaRecorder.state === 'recording') {
         const recording_audio_gif = document.getElementById('recording_audio_gif');
         mediaRecorder.stop();

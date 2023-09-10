@@ -15,10 +15,21 @@ body {
   }  
   
   #gifContainer img {
-    width: 50%;
-    opacity: 0.85; 
+    opacity: 0.90;
+    position: absolute;
+    bottom: 333px;
+    right: 118px;
+    width: 30%;
+    filter: brightness(109%) contrast(97%) hue-rotate(236deg) sepia(25%);
   }
 
+  #processing_input{
+    opacity: 1 !important;
+    position: absolute;
+    bottom: 90px !important;
+    left: 150px;
+    width: 22% !important;
+  }
 
   /* CONTROLS SECTION */
   #controls {
@@ -26,24 +37,31 @@ body {
     margin-left: 160px;
   }
 
-  #startRecording img, #stopRecording img{
-    width: 50px;
-  }
-
-  button, #recording_audio_gif {
+  button {
     background: transparent;
     border-style: none;
   }
 
-  .hiden{
-    visibility: hidden;
+  button img{
+    width: 50px;
+    height: 50px;
   }
 
-  /* REVIEW THIS CLASS: */
+   #recording_audio_gif{
+    width: 200px; 
+    /* background-color: #21EF80; */
+    animation-duration: 10s;
+    border-radius: 50px;
+   }
+
+     /* REVIEW THIS CLASS: */
   .disable, svg:hover {
     filter: brightness(0.5);
    }
 
+   .hiden{
+    visibility: hidden;
+  }
 
    @media only screen and (max-width: 600px) {
     /* MOBILES */

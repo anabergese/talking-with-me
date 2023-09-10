@@ -1,5 +1,6 @@
 export const curriculum = `
 Curriculum: Ana Belén Bergese
+I am from Argentina, and I live in Barcelona since 5 years.
 FULLSTACK WEB DEVELOPER						
 I consider myself a motivated-happy person with a desire to learn and grow professionally. I am a very friendly person and I am looking for a fast-paced work environment. I am excited to be part of your team and contribute with my technical skills, soft skills, and my willingness to learn and develop.
 Over the past 3 years, I have dedicated myself wholeheartedly to the study and development of software. I discovered a subject that truly impassions me, and I consider myself very fortunate for it.

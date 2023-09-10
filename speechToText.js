@@ -5,7 +5,7 @@ export async function convertSpeechToText(){
   const response = await openai.audio.transcriptions.create({
         model: 'whisper-1',
         file: fs.createReadStream('audio.mp3'),
-        language: "es"
+        language: "en"
       });
   return response;
 }
