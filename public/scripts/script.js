@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
           processing_input.style.display = 'block';
 
           // Send the audio data to the server
-          fetch('/upload', {
+          fetch('/.netlify/functions/api/upload', {
               method: 'POST',
               body: formData,
           })
