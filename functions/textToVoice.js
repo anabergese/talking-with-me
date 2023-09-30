@@ -1,6 +1,9 @@
 import { keyElevenLab } from './config.js'; 
 import axios from 'axios';
 
+const axios = require('axios');
+
+
 async function convertTextToSpeech(inputText) {
   try {
     const apiUrl = 'https://api.elevenlabs.io/v1/text-to-speech/Q14t7vrqAfg1BIBOnpkc/stream';
