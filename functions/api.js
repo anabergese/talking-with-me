@@ -50,6 +50,6 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
 
 });
 
-app.use('/.netlify/functions/', router);
+app.use('/.netlify/functions/api', router);
 
 export const handler = serverless(app);
