@@ -40883,7 +40883,7 @@ function stringifySafely(rawValue, parser, encoder) {
 }
 var defaults = {
   transitional: transitional_default,
-  adapter: node_default.isNode ? "http" : "xhr",
+  adapter: ["xhr", "http"],
   transformRequest: [function transformRequest(data, headers) {
     const contentType = headers.getContentType() || "";
     const hasJSONContentType = contentType.indexOf("application/json") > -1;
@@ -41310,7 +41310,7 @@ var import_follow_redirects = __toESM(require_follow_redirects(), 1);
 var import_zlib = __toESM(require("zlib"), 1);
 
 // node_modules/axios/lib/env/data.js
-var VERSION2 = "1.5.0";
+var VERSION2 = "1.5.1";
 
 // node_modules/axios/lib/helpers/parseProtocol.js
 function parseProtocol(url2) {
@@ -42037,7 +42037,7 @@ var http_default = isHttpAdapterSupported && function httpAdapter(config) {
         if (method === "HEAD" || res.statusCode === 204) {
           delete res.headers["content-encoding"];
         }
-        switch (res.headers["content-encoding"]) {
+        switch ((res.headers["content-encoding"] || "").toLowerCase()) {
           case "gzip":
           case "x-gzip":
           case "compress":
@@ -42142,7 +42142,7 @@ var http_default = isHttpAdapterSupported && function httpAdapter(config) {
     });
     if (config.timeout) {
       const timeout = parseInt(config.timeout, 10);
-      if (isNaN(timeout)) {
+      if (Number.isNaN(timeout)) {
         reject(new AxiosError_default(
           "error trying to parse `config.timeout` to int",
           AxiosError_default.ERR_BAD_OPTION_VALUE,
@@ -42316,11 +42316,14 @@ var xhr_default = isXHRAdapterSupported && function(config) {
         config.signal.removeEventListener("abort", onCanceled);
       }
     }
+    let contentType;
     if (utils_default.isFormData(requestData)) {
       if (node_default.isStandardBrowserEnv || node_default.isStandardBrowserWebWorkerEnv) {
         requestHeaders.setContentType(false);
-      } else {
-        requestHeaders.setContentType("multipart/form-data;", false);
+      } else if (!requestHeaders.getContentType(/^\s*multipart\/form-data/)) {
+        requestHeaders.setContentType("multipart/form-data");
+      } else if (utils_default.isString(contentType = requestHeaders.getContentType())) {
+        requestHeaders.setContentType(contentType.replace(/^\s*(multipart\/form-data);+/, "$1"));
       }
     }
     let request = new XMLHttpRequest();
@@ -42456,31 +42459,39 @@ utils_default.forEach(knownAdapters, (fn, value) => {
     Object.defineProperty(fn, "adapterName", { value });
   }
 });
+var renderReason = (reason) => `- ${reason}`;
+var isResolvedHandle = (adapter) => utils_default.isFunction(adapter) || adapter === null || adapter === false;
 var adapters_default = {
   getAdapter: (adapters) => {
     adapters = utils_default.isArray(adapters) ? adapters : [adapters];
     const { length } = adapters;
     let nameOrAdapter;
     let adapter;
+    const rejectedReasons = {};
     for (let i2 = 0; i2 < length; i2++) {
       nameOrAdapter = adapters[i2];
-      if (adapter = utils_default.isString(nameOrAdapter) ? knownAdapters[nameOrAdapter.toLowerCase()] : nameOrAdapter) {
+      let id;
+      adapter = nameOrAdapter;
+      if (!isResolvedHandle(nameOrAdapter)) {
+        adapter = knownAdapters[(id = String(nameOrAdapter)).toLowerCase()];
+        if (adapter === void 0) {
+          throw new AxiosError_default(`Unknown adapter '${id}'`);
+        }
+      }
+      if (adapter) {
         break;
       }
+      rejectedReasons[id || "#" + i2] = adapter;
     }
     if (!adapter) {
-      if (adapter === false) {
-        throw new AxiosError_default(
-          `Adapter ${nameOrAdapter} is not supported by the environment`,
-          "ERR_NOT_SUPPORT"
-        );
-      }
-      throw new Error(
-        utils_default.hasOwnProp(knownAdapters, nameOrAdapter) ? `Adapter '${nameOrAdapter}' is not available in the build` : `Unknown adapter '${nameOrAdapter}'`
+      const reasons = Object.entries(rejectedReasons).map(
+        ([id, state]) => `adapter ${id} ` + (state === false ? "is not supported by the environment" : "is not available in the build")
       );
-    }
-    if (!utils_default.isFunction(adapter)) {
-      throw new TypeError("adapter is not a function");
+      let s2 = length ? reasons.length > 1 ? "since :\n" + reasons.map(renderReason).join("\n") : " " + renderReason(reasons[0]) : "as no adapter specified";
+      throw new AxiosError_default(
+        `There is no suitable adapter to dispatch the request ` + s2,
+        "ERR_NOT_SUPPORT"
+      );
     }
     return adapter;
   },
