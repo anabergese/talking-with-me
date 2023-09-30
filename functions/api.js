@@ -22,6 +22,8 @@ router.get('/', (req, res) => {
  res.render('index.ejs');
 });
 
+router.get('/hello', (req, res) => res.send('Hello World!'));
+
 router.post('/upload', upload.single('audio'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No audio file received' });
