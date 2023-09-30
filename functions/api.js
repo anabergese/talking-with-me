@@ -4,7 +4,6 @@ import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToVoice.js'
 import serverless from 'serverless-http';
-import ejs from 'ejs';
 
 const app = express();
 const router = Router();
