@@ -2,6 +2,7 @@
   command = "npm install && npm run build"
   publish = "public" 
   functions = "functions"
+  node_version = "16"
 
 [functions]
   node_bundler = "esbuild"
