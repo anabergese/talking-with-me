@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
-
+        console.log("mediaRecorder, 48:", mediaRecorder);
         mediaRecorder.ondataavailable = event => {
           if (event.data.size > 0) {
             recordedChunks.push(event.data);
@@ -55,10 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mediaRecorder.onstop = () => {
           audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+          console.log("audioBlob, 58:", audioBlob);
            // Create a FormData object to send the audio data to the server
           const formData = new FormData();
           formData.append('audio', audioBlob);
-
+          console.log("formData, 61:", formData);
           // sacarg gif the background y poner gif the thinking
           console.log("esperando respuesta")
           processing_input.style.display = 'block';
