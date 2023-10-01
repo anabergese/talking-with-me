@@ -58,7 +58,7 @@ router.get('/', (req, res) => {
   </body>
   </html>
   `
-  res.send(hmtl); // 'index' corresponds to 'index.ejs' in the 'views' directory
+  res.send(html); // 'index' corresponds to 'index.ejs' in the 'views' directory
 });
 
 router.get('/hello', (req, res) => res.send('Hello World!'));
