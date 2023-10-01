@@ -23,7 +23,7 @@ const upload = multer({ storage });
 
 
 router.get('/', (req, res) => {
-  res.render('index'); // 'index' corresponds to 'index.ejs' in the 'views' directory
+  res.render('index.ejs'); // 'index' corresponds to 'index.ejs' in the 'views' directory
 });
 
 router.get('/hello', (req, res) => res.send('Hello World!'));
