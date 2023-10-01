@@ -71,6 +71,13 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
     const processedResult = await processTranscription(transcriptionResult.text);
     const audioTag = await convertTextToSpeech(processedResult);
     
+    // Log the response before sending it
+    console.log('Response sent:', {
+      processedresult: processedResult,
+      transcriptionresult: transcriptionResult,
+      audiocontent: audioTag,
+    });
+
    // Send the JSON response to frontend
     res.json({
         processedresult: processedResult,
