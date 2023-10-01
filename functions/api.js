@@ -4,10 +4,12 @@ import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToVoice.js'
 import serverless from 'serverless-http';
-import ejs from 'ejs';
+import ejs from 'ejs'; // Import the 'ejs' module
 
 const app = express();
 const router = Router();
+app.set('view engine', 'ejs'); // Set EJS as the view engine
+app.set('views', './views'); // Set the views directory (update to your actual directory)
 
 router.use(express.static('public'));
 
@@ -19,10 +21,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-app.set('view engine', 'ejs'); // Set EJS as the view engine
 
 router.get('/', (req, res) => {
-  res.render('index.ejs');
+  res.render('index'); // 'index' corresponds to 'index.ejs' in the 'views' directory
 });
 
 router.get('/hello', (req, res) => res.send('Hello World!'));
