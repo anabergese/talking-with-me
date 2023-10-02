@@ -31407,6 +31407,7 @@ async function convertTextToSpeech(inputText) {
 var import_serverless_http = __toESM(require_serverless_http(), 1);
 var app = (0, import_express.default)();
 var router = (0, import_express.Router)();
+app.set("views", "views");
 app.set("view engine", "ejs");
 app.engine("ejs", require_ejs().__express);
 router.use(import_express.default.static("public"));
@@ -31453,7 +31454,7 @@ router.get("/", (req, res) => {
   </body>
   </html>
   `;
-  res.render("index.ejs");
+  res.render("index");
 });
 router.get("/hello", (req, res) => res.send("Hello World!"));
 router.post("/upload", upload.single("audio"), async (req, res) => {
