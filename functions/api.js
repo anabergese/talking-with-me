@@ -4,12 +4,15 @@ import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToVoice.js'
 import serverless from 'serverless-http';
-import ejs from 'ejs'; // Import the 'ejs' module
 
 const app = express();
 const router = Router();
-app.set('view engine', 'ejs'); // Set EJS as the view engine
-app.set('views', './views'); // Set the views directory (update to your actual directory)
+// view engine setup
+// app.set('views', path.join(__dirname, 'views')); 
+app.set('view engine', 'ejs');
+app.engine('ejs', require('ejs').__express);
+//app.set('view engine', 'ejs'); // Set EJS as the view engine
+//app.set('views', './views'); // Set the views directory (update to your actual directory)
 
 router.use(express.static('public'));
 
@@ -58,7 +61,8 @@ router.get('/', (req, res) => {
   </body>
   </html>
   `
-  res.render('index.ejs');
+  res.render("index.ejs");
+
 });
 
 router.get('/hello', (req, res) => res.send('Hello World!'));

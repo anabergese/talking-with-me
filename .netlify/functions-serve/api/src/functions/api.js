@@ -31405,11 +31405,10 @@ async function convertTextToSpeech(inputText) {
 
 // functions/api.js
 var import_serverless_http = __toESM(require_serverless_http(), 1);
-var import_ejs = __toESM(require_ejs(), 1);
 var app = (0, import_express.default)();
 var router = (0, import_express.Router)();
 app.set("view engine", "ejs");
-app.set("views", "./views");
+app.engine("ejs", require_ejs().__express);
 router.use(import_express.default.static("public"));
 var storage = import_multer.default.diskStorage({
   destination: "./",
