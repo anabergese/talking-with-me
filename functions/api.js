@@ -64,7 +64,7 @@ router.get('/', (req, res) => {
   </body>
   </html>
   `
-  res.render("index.ejs");
+  res.render("index");
 
 });
 
