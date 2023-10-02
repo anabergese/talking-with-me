@@ -2571,7 +2571,7 @@ var require_package = __commonJS({
     module2.exports = {
       name: "@google-cloud/text-to-speech",
       description: "Cloud Text-to-Speech API client for Node.js",
-      version: "5.0.0",
+      version: "5.0.1",
       license: "Apache-2.0",
       author: "Google LLC",
       engines: {
@@ -2629,8 +2629,8 @@ var require_package = __commonJS({
         "gapic-tools": "^0.1.8",
         gts: "^5.0.0",
         jsdoc: "^4.0.0",
-        "jsdoc-fresh": "^2.0.0",
-        "jsdoc-region-tag": "^2.0.0",
+        "jsdoc-fresh": "^3.0.0",
+        "jsdoc-region-tag": "^3.0.0",
         linkinator: "4.1.2",
         long: "^5.2.3",
         mocha: "^9.2.2",
@@ -2668,14 +2668,14 @@ var require_constants = __commonJS({
       Status2[Status2["UNAVAILABLE"] = 14] = "UNAVAILABLE";
       Status2[Status2["DATA_LOSS"] = 15] = "DATA_LOSS";
       Status2[Status2["UNAUTHENTICATED"] = 16] = "UNAUTHENTICATED";
-    })(Status = exports2.Status || (exports2.Status = {}));
+    })(Status || (exports2.Status = Status = {}));
     var LogVerbosity;
     (function(LogVerbosity2) {
       LogVerbosity2[LogVerbosity2["DEBUG"] = 0] = "DEBUG";
       LogVerbosity2[LogVerbosity2["INFO"] = 1] = "INFO";
       LogVerbosity2[LogVerbosity2["ERROR"] = 2] = "ERROR";
       LogVerbosity2[LogVerbosity2["NONE"] = 3] = "NONE";
-    })(LogVerbosity = exports2.LogVerbosity || (exports2.LogVerbosity = {}));
+    })(LogVerbosity || (exports2.LogVerbosity = LogVerbosity = {}));
     var Propagate;
     (function(Propagate2) {
       Propagate2[Propagate2["DEADLINE"] = 1] = "DEADLINE";
@@ -2683,7 +2683,7 @@ var require_constants = __commonJS({
       Propagate2[Propagate2["CENSUS_TRACING_CONTEXT"] = 4] = "CENSUS_TRACING_CONTEXT";
       Propagate2[Propagate2["CANCELLATION"] = 8] = "CANCELLATION";
       Propagate2[Propagate2["DEFAULTS"] = 65535] = "DEFAULTS";
-    })(Propagate = exports2.Propagate || (exports2.Propagate = {}));
+    })(Propagate || (exports2.Propagate = Propagate = {}));
     exports2.DEFAULT_MAX_SEND_MESSAGE_LENGTH = -1;
     exports2.DEFAULT_MAX_RECEIVE_MESSAGE_LENGTH = 4 * 1024 * 1024;
   }
@@ -3433,20 +3433,29 @@ var require_service_config = __commonJS({
     var DURATION_REGEX = /^\d+(\.\d{1,9})?s$/;
     var CLIENT_LANGUAGE_STRING = "node";
     function validateName(obj) {
-      if (!("service" in obj) || typeof obj.service !== "string") {
-        throw new Error("Invalid method config name: invalid service");
-      }
-      const result = {
-        service: obj.service
-      };
-      if ("method" in obj) {
-        if (typeof obj.method === "string") {
-          result.method = obj.method;
-        } else {
-          throw new Error("Invalid method config name: invalid method");
+      if ("service" in obj && obj.service !== "") {
+        if (typeof obj.service !== "string") {
+          throw new Error(`Invalid method config name: invalid service: expected type string, got ${typeof obj.service}`);
         }
+        if ("method" in obj && obj.method !== "") {
+          if (typeof obj.method !== "string") {
+            throw new Error(`Invalid method config name: invalid method: expected type string, got ${typeof obj.service}`);
+          }
+          return {
+            service: obj.service,
+            method: obj.method
+          };
+        } else {
+          return {
+            service: obj.service
+          };
+        }
+      } else {
+        if ("method" in obj && obj.method !== void 0) {
+          throw new Error(`Invalid method config name: method set with empty or unset service`);
+        }
+        return {};
       }
-      return result;
     }
     function validateRetryPolicy(obj) {
       if (!("maxAttempts" in obj) || !Number.isInteger(obj.maxAttempts) || obj.maxAttempts < 2) {
@@ -3755,7 +3764,7 @@ var require_connectivity_state = __commonJS({
       ConnectivityState2[ConnectivityState2["READY"] = 2] = "READY";
       ConnectivityState2[ConnectivityState2["TRANSIENT_FAILURE"] = 3] = "TRANSIENT_FAILURE";
       ConnectivityState2[ConnectivityState2["SHUTDOWN"] = 4] = "SHUTDOWN";
-    })(ConnectivityState = exports2.ConnectivityState || (exports2.ConnectivityState = {}));
+    })(ConnectivityState || (exports2.ConnectivityState = ConnectivityState = {}));
   }
 });
 
@@ -3907,7 +3916,7 @@ var require_picker = __commonJS({
       PickResultType2[PickResultType2["QUEUE"] = 1] = "QUEUE";
       PickResultType2[PickResultType2["TRANSIENT_FAILURE"] = 2] = "TRANSIENT_FAILURE";
       PickResultType2[PickResultType2["DROP"] = 3] = "DROP";
-    })(PickResultType = exports2.PickResultType || (exports2.PickResultType = {}));
+    })(PickResultType || (exports2.PickResultType = PickResultType = {}));
     var UnavailablePicker = class {
       constructor(status) {
         if (status !== void 0) {
@@ -3980,6 +3989,7 @@ var require_backoff_timeout = __commonJS({
         this.running = false;
         this.hasRef = true;
         this.startTime = /* @__PURE__ */ new Date();
+        this.endTime = /* @__PURE__ */ new Date();
         if (options) {
           if (options.initialDelay) {
             this.initialDelay = options.initialDelay;
@@ -4001,6 +4011,8 @@ var require_backoff_timeout = __commonJS({
       }
       runTimer(delay) {
         var _a, _b;
+        this.endTime = this.startTime;
+        this.endTime.setMilliseconds(this.endTime.getMilliseconds() + this.nextDelay);
         clearTimeout(this.timerId);
         this.timerId = setTimeout(() => {
           this.callback();
@@ -4071,6 +4083,13 @@ var require_backoff_timeout = __commonJS({
         this.hasRef = false;
         (_b = (_a = this.timerId).unref) === null || _b === void 0 ? void 0 : _b.call(_a);
       }
+      /**
+       * Get the approximate timestamp of when the timer will fire. Only valid if
+       * this.isRunning() is true.
+       */
+      getEndTime() {
+        return this.endTime;
+      }
     };
     exports2.BackoffTimeout = BackoffTimeout;
   }
@@ -4090,6 +4109,7 @@ var require_load_balancer_child_handler = __commonJS({
         this.channelControlHelper = channelControlHelper;
         this.currentChild = null;
         this.pendingChild = null;
+        this.latestConfig = null;
         this.ChildPolicyHelper = class {
           constructor(parent) {
             this.parent = parent;
@@ -4136,6 +4156,9 @@ var require_load_balancer_child_handler = __commonJS({
           }
         };
       }
+      configUpdateRequiresNewPolicyInstance(oldConfig, newConfig) {
+        return oldConfig.getLoadBalancerName() !== newConfig.getLoadBalancerName();
+      }
       /**
        * Prerequisites: lbConfig !== null and lbConfig.name is registered
        * @param addressList
@@ -4144,7 +4167,7 @@ var require_load_balancer_child_handler = __commonJS({
        */
       updateAddressList(addressList, lbConfig, attributes) {
         let childToUpdate;
-        if (this.currentChild === null || this.currentChild.getTypeName() !== lbConfig.getLoadBalancerName()) {
+        if (this.currentChild === null || this.latestConfig === null || this.configUpdateRequiresNewPolicyInstance(this.latestConfig, lbConfig)) {
           const newHelper = new this.ChildPolicyHelper(this);
           const newChild = (0, load_balancer_1.createLoadBalancer)(lbConfig, newHelper);
           newHelper.setChild(newChild);
@@ -4165,6 +4188,7 @@ var require_load_balancer_child_handler = __commonJS({
             childToUpdate = this.pendingChild;
           }
         }
+        this.latestConfig = lbConfig;
         childToUpdate.updateAddressList(addressList, lbConfig, attributes);
       }
       exitIdle() {
@@ -4223,6 +4247,40 @@ var require_resolving_load_balancer = __commonJS({
     function trace(text) {
       logging.trace(constants_2.LogVerbosity.DEBUG, TRACER_NAME, text);
     }
+    var NAME_MATCH_LEVEL_ORDER = [
+      "SERVICE_AND_METHOD",
+      "SERVICE",
+      "EMPTY"
+    ];
+    function hasMatchingName(service, method, methodConfig, matchLevel) {
+      for (const name of methodConfig.name) {
+        switch (matchLevel) {
+          case "EMPTY":
+            if (!name.service && !name.method) {
+              return true;
+            }
+            break;
+          case "SERVICE":
+            if (name.service === service && !name.method) {
+              return true;
+            }
+            break;
+          case "SERVICE_AND_METHOD":
+            if (name.service === service && name.method === method) {
+              return true;
+            }
+        }
+      }
+      return false;
+    }
+    function findMatchingConfig(service, method, methodConfigs, matchLevel) {
+      for (const config of methodConfigs) {
+        if (hasMatchingName(service, method, config, matchLevel)) {
+          return config;
+        }
+      }
+      return null;
+    }
     function getDefaultConfigSelector(serviceConfig) {
       return function defaultConfigSelector(methodName, metadata) {
         var _a, _b;
@@ -4230,16 +4288,15 @@ var require_resolving_load_balancer = __commonJS({
         const service = (_a = splitName[0]) !== null && _a !== void 0 ? _a : "";
         const method = (_b = splitName[1]) !== null && _b !== void 0 ? _b : "";
         if (serviceConfig && serviceConfig.methodConfig) {
-          for (const methodConfig of serviceConfig.methodConfig) {
-            for (const name of methodConfig.name) {
-              if (name.service === service && (name.method === void 0 || name.method === method)) {
-                return {
-                  methodConfig,
-                  pickInformation: {},
-                  status: constants_1.Status.OK,
-                  dynamicFilterFactories: []
-                };
-              }
+          for (const matchLevel of NAME_MATCH_LEVEL_ORDER) {
+            const matchingConfig = findMatchingConfig(service, method, serviceConfig.methodConfig, matchLevel);
+            if (matchingConfig) {
+              return {
+                methodConfig: matchingConfig,
+                pickInformation: {},
+                status: constants_1.Status.OK,
+                dynamicFilterFactories: []
+              };
             }
           }
         }
@@ -4287,6 +4344,7 @@ var require_resolving_load_balancer = __commonJS({
           createSubchannel: channelControlHelper.createSubchannel.bind(channelControlHelper),
           requestReresolution: () => {
             if (this.backoffTimeout.isRunning()) {
+              trace("requestReresolution delayed by backoff timer until " + this.backoffTimeout.getEndTime().toISOString());
               this.continueResolving = true;
             } else {
               this.updateResolution();
@@ -4303,6 +4361,8 @@ var require_resolving_load_balancer = __commonJS({
         this.innerResolver = (0, resolver_1.createResolver)(target, {
           onSuccessfulResolution: (addressList, serviceConfig, serviceConfigError, configSelector, attributes) => {
             var _a;
+            this.backoffTimeout.stop();
+            this.backoffTimeout.reset();
             let workingServiceConfig = null;
             if (serviceConfig === null) {
               if (serviceConfigError === null) {
@@ -4392,7 +4452,13 @@ var require_resolving_load_balancer = __commonJS({
       destroy() {
         this.childLoadBalancer.destroy();
         this.innerResolver.destroy();
-        this.updateState(connectivity_state_1.ConnectivityState.SHUTDOWN, new picker_1.UnavailablePicker());
+        this.backoffTimeout.reset();
+        this.backoffTimeout.stop();
+        this.latestChildState = connectivity_state_1.ConnectivityState.IDLE;
+        this.latestChildPicker = new picker_1.QueuePicker(this);
+        this.currentState = connectivity_state_1.ConnectivityState.IDLE;
+        this.previousServiceConfig = null;
+        this.continueResolving = false;
       }
       getTypeName() {
         return "resolving_load_balancer";
@@ -4432,7 +4498,9 @@ var require_channel_options = __commonJS({
       "grpc.max_connection_age_ms": true,
       "grpc.max_connection_age_grace_ms": true,
       "grpc-node.max_session_memory": true,
-      "grpc.service_config_disable_resolution": true
+      "grpc.service_config_disable_resolution": true,
+      "grpc.client_idle_timeout_ms": true,
+      "grpc-node.tls_enable_trace": true
     };
     function channelOptionsEqual(options1, options2) {
       const keys1 = Object.keys(options1).sort();
@@ -7074,7 +7142,11 @@ var require_reader = __commonJS({
       this.pos += length;
       if (Array.isArray(this.buf))
         return this.buf.slice(start, end);
-      return start === end ? new this.buf.constructor(0) : this._slice.call(this.buf, start, end);
+      if (start === end) {
+        var nativeBuffer = util.Buffer;
+        return nativeBuffer ? nativeBuffer.alloc(0) : new this.buf.constructor(0);
+      }
+      return this._slice.call(this.buf, start, end);
     };
     Reader.prototype.string = function read_string() {
       var bytes = this.bytes();
@@ -9861,7 +9933,7 @@ var require_tokenize = __commonJS({
       function isDoubleSlashCommentLine(startOffset) {
         var endOffset = findEndOfLine(startOffset);
         var lineText = source.substring(startOffset, endOffset);
-        var isComment = /^\s*\/{1,2}/.test(lineText);
+        var isComment = /^\s*\/\//.test(lineText);
         return isComment;
       }
       function findEndOfLine(cursor) {
@@ -9911,7 +9983,7 @@ var require_tokenize = __commonJS({
               } else {
                 start = offset;
                 isDoc = false;
-                if (isDoubleSlashCommentLine(offset)) {
+                if (isDoubleSlashCommentLine(offset - 1)) {
                   isDoc = true;
                   do {
                     offset = findEndOfLine(offset);
@@ -10482,6 +10554,9 @@ var require_parse = __commonJS({
           while (!skip("}", true)) {
             if (!nameRe.test(token = next())) {
               throw illegal(token, "name");
+            }
+            if (token === null) {
+              throw illegal(token, "end of input");
             }
             var value;
             var propName = token;
@@ -12677,866 +12752,596 @@ var require_util2 = __commonJS({
   }
 });
 
-// node_modules/long/src/long.js
-var require_long = __commonJS({
-  "node_modules/long/src/long.js"(exports2, module2) {
-    module2.exports = Long;
-    var wasm = null;
-    try {
-      wasm = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([
-        0,
-        97,
-        115,
-        109,
-        1,
-        0,
-        0,
-        0,
-        1,
-        13,
-        2,
-        96,
-        0,
-        1,
-        127,
-        96,
-        4,
-        127,
-        127,
-        127,
-        127,
-        1,
-        127,
-        3,
-        7,
-        6,
-        0,
-        1,
-        1,
-        1,
-        1,
-        1,
-        6,
-        6,
-        1,
-        127,
-        1,
-        65,
-        0,
-        11,
-        7,
-        50,
-        6,
-        3,
-        109,
-        117,
-        108,
-        0,
-        1,
-        5,
-        100,
-        105,
-        118,
-        95,
-        115,
-        0,
-        2,
-        5,
-        100,
-        105,
-        118,
-        95,
-        117,
-        0,
-        3,
-        5,
-        114,
-        101,
-        109,
-        95,
-        115,
-        0,
-        4,
-        5,
-        114,
-        101,
-        109,
-        95,
-        117,
-        0,
-        5,
-        8,
-        103,
-        101,
-        116,
-        95,
-        104,
-        105,
-        103,
-        104,
-        0,
-        0,
-        10,
-        191,
-        1,
-        6,
-        4,
-        0,
-        35,
-        0,
-        11,
-        36,
-        1,
-        1,
-        126,
-        32,
-        0,
-        173,
-        32,
-        1,
-        173,
-        66,
-        32,
-        134,
-        132,
-        32,
-        2,
-        173,
-        32,
-        3,
-        173,
-        66,
-        32,
-        134,
-        132,
-        126,
-        34,
-        4,
-        66,
-        32,
-        135,
-        167,
-        36,
-        0,
-        32,
-        4,
-        167,
-        11,
-        36,
-        1,
-        1,
-        126,
-        32,
-        0,
-        173,
-        32,
-        1,
-        173,
-        66,
-        32,
-        134,
-        132,
-        32,
-        2,
-        173,
-        32,
-        3,
-        173,
-        66,
-        32,
-        134,
-        132,
-        127,
-        34,
-        4,
-        66,
-        32,
-        135,
-        167,
-        36,
-        0,
-        32,
-        4,
-        167,
-        11,
-        36,
-        1,
-        1,
-        126,
-        32,
-        0,
-        173,
-        32,
-        1,
-        173,
-        66,
-        32,
-        134,
-        132,
-        32,
-        2,
-        173,
-        32,
-        3,
-        173,
-        66,
-        32,
-        134,
-        132,
-        128,
-        34,
-        4,
-        66,
-        32,
-        135,
-        167,
-        36,
-        0,
-        32,
-        4,
-        167,
-        11,
-        36,
-        1,
-        1,
-        126,
-        32,
-        0,
-        173,
-        32,
-        1,
-        173,
-        66,
-        32,
-        134,
-        132,
-        32,
-        2,
-        173,
-        32,
-        3,
-        173,
-        66,
-        32,
-        134,
-        132,
-        129,
-        34,
-        4,
-        66,
-        32,
-        135,
-        167,
-        36,
-        0,
-        32,
-        4,
-        167,
-        11,
-        36,
-        1,
-        1,
-        126,
-        32,
-        0,
-        173,
-        32,
-        1,
-        173,
-        66,
-        32,
-        134,
-        132,
-        32,
-        2,
-        173,
-        32,
-        3,
-        173,
-        66,
-        32,
-        134,
-        132,
-        130,
-        34,
-        4,
-        66,
-        32,
-        135,
-        167,
-        36,
-        0,
-        32,
-        4,
-        167,
-        11
-      ])), {}).exports;
-    } catch (e) {
-    }
-    function Long(low, high, unsigned) {
-      this.low = low | 0;
-      this.high = high | 0;
-      this.unsigned = !!unsigned;
-    }
-    Long.prototype.__isLong__;
-    Object.defineProperty(Long.prototype, "__isLong__", { value: true });
-    function isLong(obj) {
-      return (obj && obj["__isLong__"]) === true;
-    }
-    Long.isLong = isLong;
-    var INT_CACHE = {};
-    var UINT_CACHE = {};
-    function fromInt(value, unsigned) {
-      var obj, cachedObj, cache;
-      if (unsigned) {
-        value >>>= 0;
-        if (cache = 0 <= value && value < 256) {
-          cachedObj = UINT_CACHE[value];
-          if (cachedObj)
-            return cachedObj;
-        }
-        obj = fromBits(value, (value | 0) < 0 ? -1 : 0, true);
-        if (cache)
-          UINT_CACHE[value] = obj;
-        return obj;
-      } else {
-        value |= 0;
-        if (cache = -128 <= value && value < 128) {
-          cachedObj = INT_CACHE[value];
-          if (cachedObj)
-            return cachedObj;
-        }
-        obj = fromBits(value, value < 0 ? -1 : 0, false);
-        if (cache)
-          INT_CACHE[value] = obj;
-        return obj;
+// node_modules/long/umd/index.js
+var require_umd = __commonJS({
+  "node_modules/long/umd/index.js"(exports2, module2) {
+    var Long = function(exports3) {
+      "use strict";
+      Object.defineProperty(exports3, "__esModule", {
+        value: true
+      });
+      exports3.default = void 0;
+      var wasm = null;
+      try {
+        wasm = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 13, 2, 96, 0, 1, 127, 96, 4, 127, 127, 127, 127, 1, 127, 3, 7, 6, 0, 1, 1, 1, 1, 1, 6, 6, 1, 127, 1, 65, 0, 11, 7, 50, 6, 3, 109, 117, 108, 0, 1, 5, 100, 105, 118, 95, 115, 0, 2, 5, 100, 105, 118, 95, 117, 0, 3, 5, 114, 101, 109, 95, 115, 0, 4, 5, 114, 101, 109, 95, 117, 0, 5, 8, 103, 101, 116, 95, 104, 105, 103, 104, 0, 0, 10, 191, 1, 6, 4, 0, 35, 0, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 126, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 127, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 128, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 129, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 130, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11])), {}).exports;
+      } catch (e) {
       }
-    }
-    Long.fromInt = fromInt;
-    function fromNumber(value, unsigned) {
-      if (isNaN(value))
-        return unsigned ? UZERO : ZERO;
-      if (unsigned) {
-        if (value < 0)
-          return UZERO;
-        if (value >= TWO_PWR_64_DBL)
-          return MAX_UNSIGNED_VALUE;
-      } else {
-        if (value <= -TWO_PWR_63_DBL)
-          return MIN_VALUE;
-        if (value + 1 >= TWO_PWR_63_DBL)
-          return MAX_VALUE;
+      function Long2(low, high, unsigned) {
+        this.low = low | 0;
+        this.high = high | 0;
+        this.unsigned = !!unsigned;
       }
-      if (value < 0)
-        return fromNumber(-value, unsigned).neg();
-      return fromBits(value % TWO_PWR_32_DBL | 0, value / TWO_PWR_32_DBL | 0, unsigned);
-    }
-    Long.fromNumber = fromNumber;
-    function fromBits(lowBits, highBits, unsigned) {
-      return new Long(lowBits, highBits, unsigned);
-    }
-    Long.fromBits = fromBits;
-    var pow_dbl = Math.pow;
-    function fromString(str, unsigned, radix) {
-      if (str.length === 0)
-        throw Error("empty string");
-      if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity")
-        return ZERO;
-      if (typeof unsigned === "number") {
-        radix = unsigned, unsigned = false;
-      } else {
-        unsigned = !!unsigned;
+      Long2.prototype.__isLong__;
+      Object.defineProperty(Long2.prototype, "__isLong__", {
+        value: true
+      });
+      function isLong(obj) {
+        return (obj && obj["__isLong__"]) === true;
       }
-      radix = radix || 10;
-      if (radix < 2 || 36 < radix)
-        throw RangeError("radix");
-      var p;
-      if ((p = str.indexOf("-")) > 0)
-        throw Error("interior hyphen");
-      else if (p === 0) {
-        return fromString(str.substring(1), unsigned, radix).neg();
+      function ctz32(value) {
+        var c = Math.clz32(value & -value);
+        return value ? 31 - c : c;
       }
-      var radixToPower = fromNumber(pow_dbl(radix, 8));
-      var result = ZERO;
-      for (var i = 0; i < str.length; i += 8) {
-        var size = Math.min(8, str.length - i), value = parseInt(str.substring(i, i + size), radix);
-        if (size < 8) {
-          var power = fromNumber(pow_dbl(radix, size));
-          result = result.mul(power).add(fromNumber(value));
-        } else {
-          result = result.mul(radixToPower);
-          result = result.add(fromNumber(value));
-        }
-      }
-      result.unsigned = unsigned;
-      return result;
-    }
-    Long.fromString = fromString;
-    function fromValue(val, unsigned) {
-      if (typeof val === "number")
-        return fromNumber(val, unsigned);
-      if (typeof val === "string")
-        return fromString(val, unsigned);
-      return fromBits(val.low, val.high, typeof unsigned === "boolean" ? unsigned : val.unsigned);
-    }
-    Long.fromValue = fromValue;
-    var TWO_PWR_16_DBL = 1 << 16;
-    var TWO_PWR_24_DBL = 1 << 24;
-    var TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
-    var TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
-    var TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
-    var TWO_PWR_24 = fromInt(TWO_PWR_24_DBL);
-    var ZERO = fromInt(0);
-    Long.ZERO = ZERO;
-    var UZERO = fromInt(0, true);
-    Long.UZERO = UZERO;
-    var ONE = fromInt(1);
-    Long.ONE = ONE;
-    var UONE = fromInt(1, true);
-    Long.UONE = UONE;
-    var NEG_ONE = fromInt(-1);
-    Long.NEG_ONE = NEG_ONE;
-    var MAX_VALUE = fromBits(4294967295 | 0, 2147483647 | 0, false);
-    Long.MAX_VALUE = MAX_VALUE;
-    var MAX_UNSIGNED_VALUE = fromBits(4294967295 | 0, 4294967295 | 0, true);
-    Long.MAX_UNSIGNED_VALUE = MAX_UNSIGNED_VALUE;
-    var MIN_VALUE = fromBits(0, 2147483648 | 0, false);
-    Long.MIN_VALUE = MIN_VALUE;
-    var LongPrototype = Long.prototype;
-    LongPrototype.toInt = function toInt() {
-      return this.unsigned ? this.low >>> 0 : this.low;
-    };
-    LongPrototype.toNumber = function toNumber() {
-      if (this.unsigned)
-        return (this.high >>> 0) * TWO_PWR_32_DBL + (this.low >>> 0);
-      return this.high * TWO_PWR_32_DBL + (this.low >>> 0);
-    };
-    LongPrototype.toString = function toString(radix) {
-      radix = radix || 10;
-      if (radix < 2 || 36 < radix)
-        throw RangeError("radix");
-      if (this.isZero())
-        return "0";
-      if (this.isNegative()) {
-        if (this.eq(MIN_VALUE)) {
-          var radixLong = fromNumber(radix), div = this.div(radixLong), rem1 = div.mul(radixLong).sub(this);
-          return div.toString(radix) + rem1.toInt().toString(radix);
-        } else
-          return "-" + this.neg().toString(radix);
-      }
-      var radixToPower = fromNumber(pow_dbl(radix, 6), this.unsigned), rem = this;
-      var result = "";
-      while (true) {
-        var remDiv = rem.div(radixToPower), intval = rem.sub(remDiv.mul(radixToPower)).toInt() >>> 0, digits = intval.toString(radix);
-        rem = remDiv;
-        if (rem.isZero())
-          return digits + result;
-        else {
-          while (digits.length < 6)
-            digits = "0" + digits;
-          result = "" + digits + result;
-        }
-      }
-    };
-    LongPrototype.getHighBits = function getHighBits() {
-      return this.high;
-    };
-    LongPrototype.getHighBitsUnsigned = function getHighBitsUnsigned() {
-      return this.high >>> 0;
-    };
-    LongPrototype.getLowBits = function getLowBits() {
-      return this.low;
-    };
-    LongPrototype.getLowBitsUnsigned = function getLowBitsUnsigned() {
-      return this.low >>> 0;
-    };
-    LongPrototype.getNumBitsAbs = function getNumBitsAbs() {
-      if (this.isNegative())
-        return this.eq(MIN_VALUE) ? 64 : this.neg().getNumBitsAbs();
-      var val = this.high != 0 ? this.high : this.low;
-      for (var bit = 31; bit > 0; bit--)
-        if ((val & 1 << bit) != 0)
-          break;
-      return this.high != 0 ? bit + 33 : bit + 1;
-    };
-    LongPrototype.isZero = function isZero() {
-      return this.high === 0 && this.low === 0;
-    };
-    LongPrototype.eqz = LongPrototype.isZero;
-    LongPrototype.isNegative = function isNegative() {
-      return !this.unsigned && this.high < 0;
-    };
-    LongPrototype.isPositive = function isPositive() {
-      return this.unsigned || this.high >= 0;
-    };
-    LongPrototype.isOdd = function isOdd() {
-      return (this.low & 1) === 1;
-    };
-    LongPrototype.isEven = function isEven() {
-      return (this.low & 1) === 0;
-    };
-    LongPrototype.equals = function equals(other) {
-      if (!isLong(other))
-        other = fromValue(other);
-      if (this.unsigned !== other.unsigned && this.high >>> 31 === 1 && other.high >>> 31 === 1)
-        return false;
-      return this.high === other.high && this.low === other.low;
-    };
-    LongPrototype.eq = LongPrototype.equals;
-    LongPrototype.notEquals = function notEquals(other) {
-      return !this.eq(
-        /* validates */
-        other
-      );
-    };
-    LongPrototype.neq = LongPrototype.notEquals;
-    LongPrototype.ne = LongPrototype.notEquals;
-    LongPrototype.lessThan = function lessThan(other) {
-      return this.comp(
-        /* validates */
-        other
-      ) < 0;
-    };
-    LongPrototype.lt = LongPrototype.lessThan;
-    LongPrototype.lessThanOrEqual = function lessThanOrEqual(other) {
-      return this.comp(
-        /* validates */
-        other
-      ) <= 0;
-    };
-    LongPrototype.lte = LongPrototype.lessThanOrEqual;
-    LongPrototype.le = LongPrototype.lessThanOrEqual;
-    LongPrototype.greaterThan = function greaterThan(other) {
-      return this.comp(
-        /* validates */
-        other
-      ) > 0;
-    };
-    LongPrototype.gt = LongPrototype.greaterThan;
-    LongPrototype.greaterThanOrEqual = function greaterThanOrEqual(other) {
-      return this.comp(
-        /* validates */
-        other
-      ) >= 0;
-    };
-    LongPrototype.gte = LongPrototype.greaterThanOrEqual;
-    LongPrototype.ge = LongPrototype.greaterThanOrEqual;
-    LongPrototype.compare = function compare(other) {
-      if (!isLong(other))
-        other = fromValue(other);
-      if (this.eq(other))
-        return 0;
-      var thisNeg = this.isNegative(), otherNeg = other.isNegative();
-      if (thisNeg && !otherNeg)
-        return -1;
-      if (!thisNeg && otherNeg)
-        return 1;
-      if (!this.unsigned)
-        return this.sub(other).isNegative() ? -1 : 1;
-      return other.high >>> 0 > this.high >>> 0 || other.high === this.high && other.low >>> 0 > this.low >>> 0 ? -1 : 1;
-    };
-    LongPrototype.comp = LongPrototype.compare;
-    LongPrototype.negate = function negate() {
-      if (!this.unsigned && this.eq(MIN_VALUE))
-        return MIN_VALUE;
-      return this.not().add(ONE);
-    };
-    LongPrototype.neg = LongPrototype.negate;
-    LongPrototype.add = function add(addend) {
-      if (!isLong(addend))
-        addend = fromValue(addend);
-      var a48 = this.high >>> 16;
-      var a32 = this.high & 65535;
-      var a16 = this.low >>> 16;
-      var a00 = this.low & 65535;
-      var b48 = addend.high >>> 16;
-      var b32 = addend.high & 65535;
-      var b16 = addend.low >>> 16;
-      var b00 = addend.low & 65535;
-      var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-      c00 += a00 + b00;
-      c16 += c00 >>> 16;
-      c00 &= 65535;
-      c16 += a16 + b16;
-      c32 += c16 >>> 16;
-      c16 &= 65535;
-      c32 += a32 + b32;
-      c48 += c32 >>> 16;
-      c32 &= 65535;
-      c48 += a48 + b48;
-      c48 &= 65535;
-      return fromBits(c16 << 16 | c00, c48 << 16 | c32, this.unsigned);
-    };
-    LongPrototype.subtract = function subtract(subtrahend) {
-      if (!isLong(subtrahend))
-        subtrahend = fromValue(subtrahend);
-      return this.add(subtrahend.neg());
-    };
-    LongPrototype.sub = LongPrototype.subtract;
-    LongPrototype.multiply = function multiply(multiplier) {
-      if (this.isZero())
-        return ZERO;
-      if (!isLong(multiplier))
-        multiplier = fromValue(multiplier);
-      if (wasm) {
-        var low = wasm.mul(
-          this.low,
-          this.high,
-          multiplier.low,
-          multiplier.high
-        );
-        return fromBits(low, wasm.get_high(), this.unsigned);
-      }
-      if (multiplier.isZero())
-        return ZERO;
-      if (this.eq(MIN_VALUE))
-        return multiplier.isOdd() ? MIN_VALUE : ZERO;
-      if (multiplier.eq(MIN_VALUE))
-        return this.isOdd() ? MIN_VALUE : ZERO;
-      if (this.isNegative()) {
-        if (multiplier.isNegative())
-          return this.neg().mul(multiplier.neg());
-        else
-          return this.neg().mul(multiplier).neg();
-      } else if (multiplier.isNegative())
-        return this.mul(multiplier.neg()).neg();
-      if (this.lt(TWO_PWR_24) && multiplier.lt(TWO_PWR_24))
-        return fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
-      var a48 = this.high >>> 16;
-      var a32 = this.high & 65535;
-      var a16 = this.low >>> 16;
-      var a00 = this.low & 65535;
-      var b48 = multiplier.high >>> 16;
-      var b32 = multiplier.high & 65535;
-      var b16 = multiplier.low >>> 16;
-      var b00 = multiplier.low & 65535;
-      var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-      c00 += a00 * b00;
-      c16 += c00 >>> 16;
-      c00 &= 65535;
-      c16 += a16 * b00;
-      c32 += c16 >>> 16;
-      c16 &= 65535;
-      c16 += a00 * b16;
-      c32 += c16 >>> 16;
-      c16 &= 65535;
-      c32 += a32 * b00;
-      c48 += c32 >>> 16;
-      c32 &= 65535;
-      c32 += a16 * b16;
-      c48 += c32 >>> 16;
-      c32 &= 65535;
-      c32 += a00 * b32;
-      c48 += c32 >>> 16;
-      c32 &= 65535;
-      c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
-      c48 &= 65535;
-      return fromBits(c16 << 16 | c00, c48 << 16 | c32, this.unsigned);
-    };
-    LongPrototype.mul = LongPrototype.multiply;
-    LongPrototype.divide = function divide(divisor) {
-      if (!isLong(divisor))
-        divisor = fromValue(divisor);
-      if (divisor.isZero())
-        throw Error("division by zero");
-      if (wasm) {
-        if (!this.unsigned && this.high === -2147483648 && divisor.low === -1 && divisor.high === -1) {
-          return this;
-        }
-        var low = (this.unsigned ? wasm.div_u : wasm.div_s)(
-          this.low,
-          this.high,
-          divisor.low,
-          divisor.high
-        );
-        return fromBits(low, wasm.get_high(), this.unsigned);
-      }
-      if (this.isZero())
-        return this.unsigned ? UZERO : ZERO;
-      var approx, rem, res;
-      if (!this.unsigned) {
-        if (this.eq(MIN_VALUE)) {
-          if (divisor.eq(ONE) || divisor.eq(NEG_ONE))
-            return MIN_VALUE;
-          else if (divisor.eq(MIN_VALUE))
-            return ONE;
-          else {
-            var halfThis = this.shr(1);
-            approx = halfThis.div(divisor).shl(1);
-            if (approx.eq(ZERO)) {
-              return divisor.isNegative() ? ONE : NEG_ONE;
-            } else {
-              rem = this.sub(divisor.mul(approx));
-              res = approx.add(rem.div(divisor));
-              return res;
-            }
+      Long2.isLong = isLong;
+      var INT_CACHE = {};
+      var UINT_CACHE = {};
+      function fromInt(value, unsigned) {
+        var obj, cachedObj, cache;
+        if (unsigned) {
+          value >>>= 0;
+          if (cache = 0 <= value && value < 256) {
+            cachedObj = UINT_CACHE[value];
+            if (cachedObj)
+              return cachedObj;
           }
-        } else if (divisor.eq(MIN_VALUE))
-          return this.unsigned ? UZERO : ZERO;
-        if (this.isNegative()) {
-          if (divisor.isNegative())
-            return this.neg().div(divisor.neg());
-          return this.neg().div(divisor).neg();
-        } else if (divisor.isNegative())
-          return this.div(divisor.neg()).neg();
-        res = ZERO;
-      } else {
-        if (!divisor.unsigned)
-          divisor = divisor.toUnsigned();
-        if (divisor.gt(this))
-          return UZERO;
-        if (divisor.gt(this.shru(1)))
-          return UONE;
-        res = UZERO;
-      }
-      rem = this;
-      while (rem.gte(divisor)) {
-        approx = Math.max(1, Math.floor(rem.toNumber() / divisor.toNumber()));
-        var log2 = Math.ceil(Math.log(approx) / Math.LN2), delta = log2 <= 48 ? 1 : pow_dbl(2, log2 - 48), approxRes = fromNumber(approx), approxRem = approxRes.mul(divisor);
-        while (approxRem.isNegative() || approxRem.gt(rem)) {
-          approx -= delta;
-          approxRes = fromNumber(approx, this.unsigned);
-          approxRem = approxRes.mul(divisor);
+          obj = fromBits(value, 0, true);
+          if (cache)
+            UINT_CACHE[value] = obj;
+          return obj;
+        } else {
+          value |= 0;
+          if (cache = -128 <= value && value < 128) {
+            cachedObj = INT_CACHE[value];
+            if (cachedObj)
+              return cachedObj;
+          }
+          obj = fromBits(value, value < 0 ? -1 : 0, false);
+          if (cache)
+            INT_CACHE[value] = obj;
+          return obj;
         }
-        if (approxRes.isZero())
-          approxRes = ONE;
-        res = res.add(approxRes);
-        rem = rem.sub(approxRem);
       }
-      return res;
-    };
-    LongPrototype.div = LongPrototype.divide;
-    LongPrototype.modulo = function modulo(divisor) {
-      if (!isLong(divisor))
-        divisor = fromValue(divisor);
-      if (wasm) {
-        var low = (this.unsigned ? wasm.rem_u : wasm.rem_s)(
-          this.low,
-          this.high,
-          divisor.low,
-          divisor.high
+      Long2.fromInt = fromInt;
+      function fromNumber(value, unsigned) {
+        if (isNaN(value))
+          return unsigned ? UZERO : ZERO;
+        if (unsigned) {
+          if (value < 0)
+            return UZERO;
+          if (value >= TWO_PWR_64_DBL)
+            return MAX_UNSIGNED_VALUE;
+        } else {
+          if (value <= -TWO_PWR_63_DBL)
+            return MIN_VALUE;
+          if (value + 1 >= TWO_PWR_63_DBL)
+            return MAX_VALUE;
+        }
+        if (value < 0)
+          return fromNumber(-value, unsigned).neg();
+        return fromBits(value % TWO_PWR_32_DBL | 0, value / TWO_PWR_32_DBL | 0, unsigned);
+      }
+      Long2.fromNumber = fromNumber;
+      function fromBits(lowBits, highBits, unsigned) {
+        return new Long2(lowBits, highBits, unsigned);
+      }
+      Long2.fromBits = fromBits;
+      var pow_dbl = Math.pow;
+      function fromString(str, unsigned, radix) {
+        if (str.length === 0)
+          throw Error("empty string");
+        if (typeof unsigned === "number") {
+          radix = unsigned;
+          unsigned = false;
+        } else {
+          unsigned = !!unsigned;
+        }
+        if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity")
+          return unsigned ? UZERO : ZERO;
+        radix = radix || 10;
+        if (radix < 2 || 36 < radix)
+          throw RangeError("radix");
+        var p;
+        if ((p = str.indexOf("-")) > 0)
+          throw Error("interior hyphen");
+        else if (p === 0) {
+          return fromString(str.substring(1), unsigned, radix).neg();
+        }
+        var radixToPower = fromNumber(pow_dbl(radix, 8));
+        var result = ZERO;
+        for (var i = 0; i < str.length; i += 8) {
+          var size = Math.min(8, str.length - i), value = parseInt(str.substring(i, i + size), radix);
+          if (size < 8) {
+            var power = fromNumber(pow_dbl(radix, size));
+            result = result.mul(power).add(fromNumber(value));
+          } else {
+            result = result.mul(radixToPower);
+            result = result.add(fromNumber(value));
+          }
+        }
+        result.unsigned = unsigned;
+        return result;
+      }
+      Long2.fromString = fromString;
+      function fromValue(val, unsigned) {
+        if (typeof val === "number")
+          return fromNumber(val, unsigned);
+        if (typeof val === "string")
+          return fromString(val, unsigned);
+        return fromBits(val.low, val.high, typeof unsigned === "boolean" ? unsigned : val.unsigned);
+      }
+      Long2.fromValue = fromValue;
+      var TWO_PWR_16_DBL = 1 << 16;
+      var TWO_PWR_24_DBL = 1 << 24;
+      var TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
+      var TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
+      var TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
+      var TWO_PWR_24 = fromInt(TWO_PWR_24_DBL);
+      var ZERO = fromInt(0);
+      Long2.ZERO = ZERO;
+      var UZERO = fromInt(0, true);
+      Long2.UZERO = UZERO;
+      var ONE = fromInt(1);
+      Long2.ONE = ONE;
+      var UONE = fromInt(1, true);
+      Long2.UONE = UONE;
+      var NEG_ONE = fromInt(-1);
+      Long2.NEG_ONE = NEG_ONE;
+      var MAX_VALUE = fromBits(4294967295 | 0, 2147483647 | 0, false);
+      Long2.MAX_VALUE = MAX_VALUE;
+      var MAX_UNSIGNED_VALUE = fromBits(4294967295 | 0, 4294967295 | 0, true);
+      Long2.MAX_UNSIGNED_VALUE = MAX_UNSIGNED_VALUE;
+      var MIN_VALUE = fromBits(0, 2147483648 | 0, false);
+      Long2.MIN_VALUE = MIN_VALUE;
+      var LongPrototype = Long2.prototype;
+      LongPrototype.toInt = function toInt() {
+        return this.unsigned ? this.low >>> 0 : this.low;
+      };
+      LongPrototype.toNumber = function toNumber() {
+        if (this.unsigned)
+          return (this.high >>> 0) * TWO_PWR_32_DBL + (this.low >>> 0);
+        return this.high * TWO_PWR_32_DBL + (this.low >>> 0);
+      };
+      LongPrototype.toString = function toString(radix) {
+        radix = radix || 10;
+        if (radix < 2 || 36 < radix)
+          throw RangeError("radix");
+        if (this.isZero())
+          return "0";
+        if (this.isNegative()) {
+          if (this.eq(MIN_VALUE)) {
+            var radixLong = fromNumber(radix), div = this.div(radixLong), rem1 = div.mul(radixLong).sub(this);
+            return div.toString(radix) + rem1.toInt().toString(radix);
+          } else
+            return "-" + this.neg().toString(radix);
+        }
+        var radixToPower = fromNumber(pow_dbl(radix, 6), this.unsigned), rem = this;
+        var result = "";
+        while (true) {
+          var remDiv = rem.div(radixToPower), intval = rem.sub(remDiv.mul(radixToPower)).toInt() >>> 0, digits = intval.toString(radix);
+          rem = remDiv;
+          if (rem.isZero())
+            return digits + result;
+          else {
+            while (digits.length < 6)
+              digits = "0" + digits;
+            result = "" + digits + result;
+          }
+        }
+      };
+      LongPrototype.getHighBits = function getHighBits() {
+        return this.high;
+      };
+      LongPrototype.getHighBitsUnsigned = function getHighBitsUnsigned() {
+        return this.high >>> 0;
+      };
+      LongPrototype.getLowBits = function getLowBits() {
+        return this.low;
+      };
+      LongPrototype.getLowBitsUnsigned = function getLowBitsUnsigned() {
+        return this.low >>> 0;
+      };
+      LongPrototype.getNumBitsAbs = function getNumBitsAbs() {
+        if (this.isNegative())
+          return this.eq(MIN_VALUE) ? 64 : this.neg().getNumBitsAbs();
+        var val = this.high != 0 ? this.high : this.low;
+        for (var bit = 31; bit > 0; bit--)
+          if ((val & 1 << bit) != 0)
+            break;
+        return this.high != 0 ? bit + 33 : bit + 1;
+      };
+      LongPrototype.isZero = function isZero() {
+        return this.high === 0 && this.low === 0;
+      };
+      LongPrototype.eqz = LongPrototype.isZero;
+      LongPrototype.isNegative = function isNegative() {
+        return !this.unsigned && this.high < 0;
+      };
+      LongPrototype.isPositive = function isPositive() {
+        return this.unsigned || this.high >= 0;
+      };
+      LongPrototype.isOdd = function isOdd() {
+        return (this.low & 1) === 1;
+      };
+      LongPrototype.isEven = function isEven() {
+        return (this.low & 1) === 0;
+      };
+      LongPrototype.equals = function equals(other) {
+        if (!isLong(other))
+          other = fromValue(other);
+        if (this.unsigned !== other.unsigned && this.high >>> 31 === 1 && other.high >>> 31 === 1)
+          return false;
+        return this.high === other.high && this.low === other.low;
+      };
+      LongPrototype.eq = LongPrototype.equals;
+      LongPrototype.notEquals = function notEquals(other) {
+        return !this.eq(
+          /* validates */
+          other
         );
-        return fromBits(low, wasm.get_high(), this.unsigned);
-      }
-      return this.sub(this.div(divisor).mul(divisor));
-    };
-    LongPrototype.mod = LongPrototype.modulo;
-    LongPrototype.rem = LongPrototype.modulo;
-    LongPrototype.not = function not() {
-      return fromBits(~this.low, ~this.high, this.unsigned);
-    };
-    LongPrototype.and = function and(other) {
-      if (!isLong(other))
-        other = fromValue(other);
-      return fromBits(this.low & other.low, this.high & other.high, this.unsigned);
-    };
-    LongPrototype.or = function or(other) {
-      if (!isLong(other))
-        other = fromValue(other);
-      return fromBits(this.low | other.low, this.high | other.high, this.unsigned);
-    };
-    LongPrototype.xor = function xor(other) {
-      if (!isLong(other))
-        other = fromValue(other);
-      return fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
-    };
-    LongPrototype.shiftLeft = function shiftLeft(numBits) {
-      if (isLong(numBits))
-        numBits = numBits.toInt();
-      if ((numBits &= 63) === 0)
-        return this;
-      else if (numBits < 32)
-        return fromBits(this.low << numBits, this.high << numBits | this.low >>> 32 - numBits, this.unsigned);
-      else
-        return fromBits(0, this.low << numBits - 32, this.unsigned);
-    };
-    LongPrototype.shl = LongPrototype.shiftLeft;
-    LongPrototype.shiftRight = function shiftRight(numBits) {
-      if (isLong(numBits))
-        numBits = numBits.toInt();
-      if ((numBits &= 63) === 0)
-        return this;
-      else if (numBits < 32)
-        return fromBits(this.low >>> numBits | this.high << 32 - numBits, this.high >> numBits, this.unsigned);
-      else
-        return fromBits(this.high >> numBits - 32, this.high >= 0 ? 0 : -1, this.unsigned);
-    };
-    LongPrototype.shr = LongPrototype.shiftRight;
-    LongPrototype.shiftRightUnsigned = function shiftRightUnsigned(numBits) {
-      if (isLong(numBits))
-        numBits = numBits.toInt();
-      numBits &= 63;
-      if (numBits === 0)
-        return this;
-      else {
-        var high = this.high;
-        if (numBits < 32) {
-          var low = this.low;
-          return fromBits(low >>> numBits | high << 32 - numBits, high >>> numBits, this.unsigned);
-        } else if (numBits === 32)
-          return fromBits(high, 0, this.unsigned);
+      };
+      LongPrototype.neq = LongPrototype.notEquals;
+      LongPrototype.ne = LongPrototype.notEquals;
+      LongPrototype.lessThan = function lessThan(other) {
+        return this.comp(
+          /* validates */
+          other
+        ) < 0;
+      };
+      LongPrototype.lt = LongPrototype.lessThan;
+      LongPrototype.lessThanOrEqual = function lessThanOrEqual(other) {
+        return this.comp(
+          /* validates */
+          other
+        ) <= 0;
+      };
+      LongPrototype.lte = LongPrototype.lessThanOrEqual;
+      LongPrototype.le = LongPrototype.lessThanOrEqual;
+      LongPrototype.greaterThan = function greaterThan(other) {
+        return this.comp(
+          /* validates */
+          other
+        ) > 0;
+      };
+      LongPrototype.gt = LongPrototype.greaterThan;
+      LongPrototype.greaterThanOrEqual = function greaterThanOrEqual(other) {
+        return this.comp(
+          /* validates */
+          other
+        ) >= 0;
+      };
+      LongPrototype.gte = LongPrototype.greaterThanOrEqual;
+      LongPrototype.ge = LongPrototype.greaterThanOrEqual;
+      LongPrototype.compare = function compare(other) {
+        if (!isLong(other))
+          other = fromValue(other);
+        if (this.eq(other))
+          return 0;
+        var thisNeg = this.isNegative(), otherNeg = other.isNegative();
+        if (thisNeg && !otherNeg)
+          return -1;
+        if (!thisNeg && otherNeg)
+          return 1;
+        if (!this.unsigned)
+          return this.sub(other).isNegative() ? -1 : 1;
+        return other.high >>> 0 > this.high >>> 0 || other.high === this.high && other.low >>> 0 > this.low >>> 0 ? -1 : 1;
+      };
+      LongPrototype.comp = LongPrototype.compare;
+      LongPrototype.negate = function negate() {
+        if (!this.unsigned && this.eq(MIN_VALUE))
+          return MIN_VALUE;
+        return this.not().add(ONE);
+      };
+      LongPrototype.neg = LongPrototype.negate;
+      LongPrototype.add = function add(addend) {
+        if (!isLong(addend))
+          addend = fromValue(addend);
+        var a48 = this.high >>> 16;
+        var a32 = this.high & 65535;
+        var a16 = this.low >>> 16;
+        var a00 = this.low & 65535;
+        var b48 = addend.high >>> 16;
+        var b32 = addend.high & 65535;
+        var b16 = addend.low >>> 16;
+        var b00 = addend.low & 65535;
+        var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+        c00 += a00 + b00;
+        c16 += c00 >>> 16;
+        c00 &= 65535;
+        c16 += a16 + b16;
+        c32 += c16 >>> 16;
+        c16 &= 65535;
+        c32 += a32 + b32;
+        c48 += c32 >>> 16;
+        c32 &= 65535;
+        c48 += a48 + b48;
+        c48 &= 65535;
+        return fromBits(c16 << 16 | c00, c48 << 16 | c32, this.unsigned);
+      };
+      LongPrototype.subtract = function subtract(subtrahend) {
+        if (!isLong(subtrahend))
+          subtrahend = fromValue(subtrahend);
+        return this.add(subtrahend.neg());
+      };
+      LongPrototype.sub = LongPrototype.subtract;
+      LongPrototype.multiply = function multiply(multiplier) {
+        if (this.isZero())
+          return this;
+        if (!isLong(multiplier))
+          multiplier = fromValue(multiplier);
+        if (wasm) {
+          var low = wasm["mul"](this.low, this.high, multiplier.low, multiplier.high);
+          return fromBits(low, wasm["get_high"](), this.unsigned);
+        }
+        if (multiplier.isZero())
+          return this.unsigned ? UZERO : ZERO;
+        if (this.eq(MIN_VALUE))
+          return multiplier.isOdd() ? MIN_VALUE : ZERO;
+        if (multiplier.eq(MIN_VALUE))
+          return this.isOdd() ? MIN_VALUE : ZERO;
+        if (this.isNegative()) {
+          if (multiplier.isNegative())
+            return this.neg().mul(multiplier.neg());
+          else
+            return this.neg().mul(multiplier).neg();
+        } else if (multiplier.isNegative())
+          return this.mul(multiplier.neg()).neg();
+        if (this.lt(TWO_PWR_24) && multiplier.lt(TWO_PWR_24))
+          return fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
+        var a48 = this.high >>> 16;
+        var a32 = this.high & 65535;
+        var a16 = this.low >>> 16;
+        var a00 = this.low & 65535;
+        var b48 = multiplier.high >>> 16;
+        var b32 = multiplier.high & 65535;
+        var b16 = multiplier.low >>> 16;
+        var b00 = multiplier.low & 65535;
+        var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+        c00 += a00 * b00;
+        c16 += c00 >>> 16;
+        c00 &= 65535;
+        c16 += a16 * b00;
+        c32 += c16 >>> 16;
+        c16 &= 65535;
+        c16 += a00 * b16;
+        c32 += c16 >>> 16;
+        c16 &= 65535;
+        c32 += a32 * b00;
+        c48 += c32 >>> 16;
+        c32 &= 65535;
+        c32 += a16 * b16;
+        c48 += c32 >>> 16;
+        c32 &= 65535;
+        c32 += a00 * b32;
+        c48 += c32 >>> 16;
+        c32 &= 65535;
+        c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
+        c48 &= 65535;
+        return fromBits(c16 << 16 | c00, c48 << 16 | c32, this.unsigned);
+      };
+      LongPrototype.mul = LongPrototype.multiply;
+      LongPrototype.divide = function divide(divisor) {
+        if (!isLong(divisor))
+          divisor = fromValue(divisor);
+        if (divisor.isZero())
+          throw Error("division by zero");
+        if (wasm) {
+          if (!this.unsigned && this.high === -2147483648 && divisor.low === -1 && divisor.high === -1) {
+            return this;
+          }
+          var low = (this.unsigned ? wasm["div_u"] : wasm["div_s"])(this.low, this.high, divisor.low, divisor.high);
+          return fromBits(low, wasm["get_high"](), this.unsigned);
+        }
+        if (this.isZero())
+          return this.unsigned ? UZERO : ZERO;
+        var approx, rem, res;
+        if (!this.unsigned) {
+          if (this.eq(MIN_VALUE)) {
+            if (divisor.eq(ONE) || divisor.eq(NEG_ONE))
+              return MIN_VALUE;
+            else if (divisor.eq(MIN_VALUE))
+              return ONE;
+            else {
+              var halfThis = this.shr(1);
+              approx = halfThis.div(divisor).shl(1);
+              if (approx.eq(ZERO)) {
+                return divisor.isNegative() ? ONE : NEG_ONE;
+              } else {
+                rem = this.sub(divisor.mul(approx));
+                res = approx.add(rem.div(divisor));
+                return res;
+              }
+            }
+          } else if (divisor.eq(MIN_VALUE))
+            return this.unsigned ? UZERO : ZERO;
+          if (this.isNegative()) {
+            if (divisor.isNegative())
+              return this.neg().div(divisor.neg());
+            return this.neg().div(divisor).neg();
+          } else if (divisor.isNegative())
+            return this.div(divisor.neg()).neg();
+          res = ZERO;
+        } else {
+          if (!divisor.unsigned)
+            divisor = divisor.toUnsigned();
+          if (divisor.gt(this))
+            return UZERO;
+          if (divisor.gt(this.shru(1)))
+            return UONE;
+          res = UZERO;
+        }
+        rem = this;
+        while (rem.gte(divisor)) {
+          approx = Math.max(1, Math.floor(rem.toNumber() / divisor.toNumber()));
+          var log2 = Math.ceil(Math.log(approx) / Math.LN2), delta = log2 <= 48 ? 1 : pow_dbl(2, log2 - 48), approxRes = fromNumber(approx), approxRem = approxRes.mul(divisor);
+          while (approxRem.isNegative() || approxRem.gt(rem)) {
+            approx -= delta;
+            approxRes = fromNumber(approx, this.unsigned);
+            approxRem = approxRes.mul(divisor);
+          }
+          if (approxRes.isZero())
+            approxRes = ONE;
+          res = res.add(approxRes);
+          rem = rem.sub(approxRem);
+        }
+        return res;
+      };
+      LongPrototype.div = LongPrototype.divide;
+      LongPrototype.modulo = function modulo(divisor) {
+        if (!isLong(divisor))
+          divisor = fromValue(divisor);
+        if (wasm) {
+          var low = (this.unsigned ? wasm["rem_u"] : wasm["rem_s"])(this.low, this.high, divisor.low, divisor.high);
+          return fromBits(low, wasm["get_high"](), this.unsigned);
+        }
+        return this.sub(this.div(divisor).mul(divisor));
+      };
+      LongPrototype.mod = LongPrototype.modulo;
+      LongPrototype.rem = LongPrototype.modulo;
+      LongPrototype.not = function not() {
+        return fromBits(~this.low, ~this.high, this.unsigned);
+      };
+      LongPrototype.countLeadingZeros = function countLeadingZeros() {
+        return this.high ? Math.clz32(this.high) : Math.clz32(this.low) + 32;
+      };
+      LongPrototype.clz = LongPrototype.countLeadingZeros;
+      LongPrototype.countTrailingZeros = function countTrailingZeros() {
+        return this.low ? ctz32(this.low) : ctz32(this.high) + 32;
+      };
+      LongPrototype.ctz = LongPrototype.countTrailingZeros;
+      LongPrototype.and = function and(other) {
+        if (!isLong(other))
+          other = fromValue(other);
+        return fromBits(this.low & other.low, this.high & other.high, this.unsigned);
+      };
+      LongPrototype.or = function or(other) {
+        if (!isLong(other))
+          other = fromValue(other);
+        return fromBits(this.low | other.low, this.high | other.high, this.unsigned);
+      };
+      LongPrototype.xor = function xor(other) {
+        if (!isLong(other))
+          other = fromValue(other);
+        return fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
+      };
+      LongPrototype.shiftLeft = function shiftLeft(numBits) {
+        if (isLong(numBits))
+          numBits = numBits.toInt();
+        if ((numBits &= 63) === 0)
+          return this;
+        else if (numBits < 32)
+          return fromBits(this.low << numBits, this.high << numBits | this.low >>> 32 - numBits, this.unsigned);
         else
-          return fromBits(high >>> numBits - 32, 0, this.unsigned);
-      }
-    };
-    LongPrototype.shru = LongPrototype.shiftRightUnsigned;
-    LongPrototype.shr_u = LongPrototype.shiftRightUnsigned;
-    LongPrototype.toSigned = function toSigned() {
-      if (!this.unsigned)
-        return this;
-      return fromBits(this.low, this.high, false);
-    };
-    LongPrototype.toUnsigned = function toUnsigned() {
-      if (this.unsigned)
-        return this;
-      return fromBits(this.low, this.high, true);
-    };
-    LongPrototype.toBytes = function toBytes(le) {
-      return le ? this.toBytesLE() : this.toBytesBE();
-    };
-    LongPrototype.toBytesLE = function toBytesLE() {
-      var hi = this.high, lo = this.low;
-      return [
-        lo & 255,
-        lo >>> 8 & 255,
-        lo >>> 16 & 255,
-        lo >>> 24,
-        hi & 255,
-        hi >>> 8 & 255,
-        hi >>> 16 & 255,
-        hi >>> 24
-      ];
-    };
-    LongPrototype.toBytesBE = function toBytesBE() {
-      var hi = this.high, lo = this.low;
-      return [
-        hi >>> 24,
-        hi >>> 16 & 255,
-        hi >>> 8 & 255,
-        hi & 255,
-        lo >>> 24,
-        lo >>> 16 & 255,
-        lo >>> 8 & 255,
-        lo & 255
-      ];
-    };
-    Long.fromBytes = function fromBytes(bytes, unsigned, le) {
-      return le ? Long.fromBytesLE(bytes, unsigned) : Long.fromBytesBE(bytes, unsigned);
-    };
-    Long.fromBytesLE = function fromBytesLE(bytes, unsigned) {
-      return new Long(
-        bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24,
-        bytes[4] | bytes[5] << 8 | bytes[6] << 16 | bytes[7] << 24,
-        unsigned
-      );
-    };
-    Long.fromBytesBE = function fromBytesBE(bytes, unsigned) {
-      return new Long(
-        bytes[4] << 24 | bytes[5] << 16 | bytes[6] << 8 | bytes[7],
-        bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3],
-        unsigned
-      );
-    };
+          return fromBits(0, this.low << numBits - 32, this.unsigned);
+      };
+      LongPrototype.shl = LongPrototype.shiftLeft;
+      LongPrototype.shiftRight = function shiftRight(numBits) {
+        if (isLong(numBits))
+          numBits = numBits.toInt();
+        if ((numBits &= 63) === 0)
+          return this;
+        else if (numBits < 32)
+          return fromBits(this.low >>> numBits | this.high << 32 - numBits, this.high >> numBits, this.unsigned);
+        else
+          return fromBits(this.high >> numBits - 32, this.high >= 0 ? 0 : -1, this.unsigned);
+      };
+      LongPrototype.shr = LongPrototype.shiftRight;
+      LongPrototype.shiftRightUnsigned = function shiftRightUnsigned(numBits) {
+        if (isLong(numBits))
+          numBits = numBits.toInt();
+        if ((numBits &= 63) === 0)
+          return this;
+        if (numBits < 32)
+          return fromBits(this.low >>> numBits | this.high << 32 - numBits, this.high >>> numBits, this.unsigned);
+        if (numBits === 32)
+          return fromBits(this.high, 0, this.unsigned);
+        return fromBits(this.high >>> numBits - 32, 0, this.unsigned);
+      };
+      LongPrototype.shru = LongPrototype.shiftRightUnsigned;
+      LongPrototype.shr_u = LongPrototype.shiftRightUnsigned;
+      LongPrototype.rotateLeft = function rotateLeft(numBits) {
+        var b;
+        if (isLong(numBits))
+          numBits = numBits.toInt();
+        if ((numBits &= 63) === 0)
+          return this;
+        if (numBits === 32)
+          return fromBits(this.high, this.low, this.unsigned);
+        if (numBits < 32) {
+          b = 32 - numBits;
+          return fromBits(this.low << numBits | this.high >>> b, this.high << numBits | this.low >>> b, this.unsigned);
+        }
+        numBits -= 32;
+        b = 32 - numBits;
+        return fromBits(this.high << numBits | this.low >>> b, this.low << numBits | this.high >>> b, this.unsigned);
+      };
+      LongPrototype.rotl = LongPrototype.rotateLeft;
+      LongPrototype.rotateRight = function rotateRight(numBits) {
+        var b;
+        if (isLong(numBits))
+          numBits = numBits.toInt();
+        if ((numBits &= 63) === 0)
+          return this;
+        if (numBits === 32)
+          return fromBits(this.high, this.low, this.unsigned);
+        if (numBits < 32) {
+          b = 32 - numBits;
+          return fromBits(this.high << b | this.low >>> numBits, this.low << b | this.high >>> numBits, this.unsigned);
+        }
+        numBits -= 32;
+        b = 32 - numBits;
+        return fromBits(this.low << b | this.high >>> numBits, this.high << b | this.low >>> numBits, this.unsigned);
+      };
+      LongPrototype.rotr = LongPrototype.rotateRight;
+      LongPrototype.toSigned = function toSigned() {
+        if (!this.unsigned)
+          return this;
+        return fromBits(this.low, this.high, false);
+      };
+      LongPrototype.toUnsigned = function toUnsigned() {
+        if (this.unsigned)
+          return this;
+        return fromBits(this.low, this.high, true);
+      };
+      LongPrototype.toBytes = function toBytes(le) {
+        return le ? this.toBytesLE() : this.toBytesBE();
+      };
+      LongPrototype.toBytesLE = function toBytesLE() {
+        var hi = this.high, lo = this.low;
+        return [lo & 255, lo >>> 8 & 255, lo >>> 16 & 255, lo >>> 24, hi & 255, hi >>> 8 & 255, hi >>> 16 & 255, hi >>> 24];
+      };
+      LongPrototype.toBytesBE = function toBytesBE() {
+        var hi = this.high, lo = this.low;
+        return [hi >>> 24, hi >>> 16 & 255, hi >>> 8 & 255, hi & 255, lo >>> 24, lo >>> 16 & 255, lo >>> 8 & 255, lo & 255];
+      };
+      Long2.fromBytes = function fromBytes(bytes, unsigned, le) {
+        return le ? Long2.fromBytesLE(bytes, unsigned) : Long2.fromBytesBE(bytes, unsigned);
+      };
+      Long2.fromBytesLE = function fromBytesLE(bytes, unsigned) {
+        return new Long2(bytes[0] | bytes[1] << 8 | bytes[2] << 16 | bytes[3] << 24, bytes[4] | bytes[5] << 8 | bytes[6] << 16 | bytes[7] << 24, unsigned);
+      };
+      Long2.fromBytesBE = function fromBytesBE(bytes, unsigned) {
+        return new Long2(bytes[4] << 24 | bytes[5] << 16 | bytes[6] << 8 | bytes[7], bytes[0] << 24 | bytes[1] << 16 | bytes[2] << 8 | bytes[3], unsigned);
+      };
+      var _default = Long2;
+      exports3.default = _default;
+      return "default" in exports3 ? exports3.default : exports3;
+    }({});
+    if (typeof define === "function" && define.amd)
+      define([], function() {
+        return Long;
+      });
+    else if (typeof module2 === "object" && typeof exports2 === "object")
+      module2.exports = Long;
   }
 });
 
@@ -13550,7 +13355,7 @@ var require_src2 = __commonJS({
     var Protobuf = require_protobufjs();
     var descriptor = require_descriptor2();
     var util_1 = require_util2();
-    var Long = require_long();
+    var Long = require_umd();
     exports2.Long = Long;
     function isAnyExtension(obj) {
       return "@type" in obj && typeof obj["@type"] === "string";
@@ -13786,19 +13591,28 @@ var require_channelz = __commonJS({
         var _a, _b, _c;
         switch (child.kind) {
           case "channel": {
-            let trackedChild = (_a = this.channelChildren.get(child.id)) !== null && _a !== void 0 ? _a : { ref: child, count: 0 };
+            const trackedChild = (_a = this.channelChildren.get(child.id)) !== null && _a !== void 0 ? _a : {
+              ref: child,
+              count: 0
+            };
             trackedChild.count += 1;
             this.channelChildren.set(child.id, trackedChild);
             break;
           }
           case "subchannel": {
-            let trackedChild = (_b = this.subchannelChildren.get(child.id)) !== null && _b !== void 0 ? _b : { ref: child, count: 0 };
+            const trackedChild = (_b = this.subchannelChildren.get(child.id)) !== null && _b !== void 0 ? _b : {
+              ref: child,
+              count: 0
+            };
             trackedChild.count += 1;
             this.subchannelChildren.set(child.id, trackedChild);
             break;
           }
           case "socket": {
-            let trackedChild = (_c = this.socketChildren.get(child.id)) !== null && _c !== void 0 ? _c : { ref: child, count: 0 };
+            const trackedChild = (_c = this.socketChildren.get(child.id)) !== null && _c !== void 0 ? _c : {
+              ref: child,
+              count: 0
+            };
             trackedChild.count += 1;
             this.socketChildren.set(child.id, trackedChild);
             break;
@@ -13808,7 +13622,7 @@ var require_channelz = __commonJS({
       unrefChild(child) {
         switch (child.kind) {
           case "channel": {
-            let trackedChild = this.channelChildren.get(child.id);
+            const trackedChild = this.channelChildren.get(child.id);
             if (trackedChild !== void 0) {
               trackedChild.count -= 1;
               if (trackedChild.count === 0) {
@@ -13820,7 +13634,7 @@ var require_channelz = __commonJS({
             break;
           }
           case "subchannel": {
-            let trackedChild = this.subchannelChildren.get(child.id);
+            const trackedChild = this.subchannelChildren.get(child.id);
             if (trackedChild !== void 0) {
               trackedChild.count -= 1;
               if (trackedChild.count === 0) {
@@ -13832,7 +13646,7 @@ var require_channelz = __commonJS({
             break;
           }
           case "socket": {
-            let trackedChild = this.socketChildren.get(child.id);
+            const trackedChild = this.socketChildren.get(child.id);
             if (trackedChild !== void 0) {
               trackedChild.count -= 1;
               if (trackedChild.count === 0) {
@@ -14036,8 +13850,8 @@ var require_channelz = __commonJS({
       const channelEntry = channels[channelId];
       if (channelEntry === void 0) {
         callback({
-          "code": constants_1.Status.NOT_FOUND,
-          "details": "No channel data found for id " + channelId
+          code: constants_1.Status.NOT_FOUND,
+          details: "No channel data found for id " + channelId
         });
         return;
       }
@@ -14081,8 +13895,8 @@ var require_channelz = __commonJS({
       const serverEntry = servers[serverId];
       if (serverEntry === void 0) {
         callback({
-          "code": constants_1.Status.NOT_FOUND,
-          "details": "No server data found for id " + serverId
+          code: constants_1.Status.NOT_FOUND,
+          details: "No server data found for id " + serverId
         });
         return;
       }
@@ -14112,8 +13926,8 @@ var require_channelz = __commonJS({
       const subchannelEntry = subchannels[subchannelId];
       if (subchannelEntry === void 0) {
         callback({
-          "code": constants_1.Status.NOT_FOUND,
-          "details": "No subchannel data found for id " + subchannelId
+          code: constants_1.Status.NOT_FOUND,
+          details: "No subchannel data found for id " + subchannelId
         });
         return;
       }
@@ -14158,8 +13972,8 @@ var require_channelz = __commonJS({
       const socketEntry = sockets[socketId];
       if (socketEntry === void 0) {
         callback({
-          "code": constants_1.Status.NOT_FOUND,
-          "details": "No socket data found for id " + socketId
+          code: constants_1.Status.NOT_FOUND,
+          details: "No socket data found for id " + socketId
         });
         return;
       }
@@ -14202,8 +14016,8 @@ var require_channelz = __commonJS({
       const serverEntry = servers[serverId];
       if (serverEntry === void 0) {
         callback({
-          "code": constants_1.Status.NOT_FOUND,
-          "details": "No server data found for id " + serverId
+          code: constants_1.Status.NOT_FOUND,
+          details: "No server data found for id " + serverId
         });
         return;
       }
@@ -14250,9 +14064,7 @@ var require_channelz = __commonJS({
         enums: String,
         defaults: true,
         oneofs: true,
-        includeDirs: [
-          `${__dirname}/../../proto`
-        ]
+        includeDirs: [`${__dirname}/../../proto`]
       });
       const channelzGrpcObject = (0, make_client_1.loadPackageDefinition)(loadedProto);
       loadedChannelzDefinition = channelzGrpcObject.grpc.channelz.v1.Channelz.service;
@@ -14315,6 +14127,7 @@ var require_subchannel = __commonJS({
         this.backoffTimeout = new backoff_timeout_1.BackoffTimeout(() => {
           this.handleBackoffTimer();
         }, backoffOptions);
+        this.backoffTimeout.unref();
         this.subchannelAddressString = (0, subchannel_address_1.subchannelAddressToString)(subchannelAddress);
         this.keepaliveTime = (_a = options["grpc.keepalive_time_ms"]) !== null && _a !== void 0 ? _a : -1;
         if (options["grpc.enable_channelz"] === 0) {
@@ -14397,7 +14210,7 @@ var require_subchannel = __commonJS({
         }
         this.trace(connectivity_state_1.ConnectivityState[this.connectivityState] + " -> " + connectivity_state_1.ConnectivityState[newState]);
         if (this.channelzEnabled) {
-          this.channelzTrace.addTrace("CT_INFO", connectivity_state_1.ConnectivityState[this.connectivityState] + " -> " + connectivity_state_1.ConnectivityState[newState]);
+          this.channelzTrace.addTrace("CT_INFO", "Connectivity state change to " + connectivity_state_1.ConnectivityState[newState]);
         }
         const previousState = this.connectivityState;
         this.connectivityState = newState;
@@ -14539,6 +14352,9 @@ var require_subchannel = __commonJS({
       }
       getRealSubchannel() {
         return this;
+      }
+      realSubchannelEquals(other) {
+        return other.getRealSubchannel() === this;
       }
       throttleKeepalive(newKeepaliveTime) {
         if (newKeepaliveTime > this.keepaliveTime) {
@@ -14980,7 +14796,12 @@ var require_subchannel_call = __commonJS({
                 code = constants_1.Status.INTERNAL;
                 details = `Received RST_STREAM with code ${http2Stream.rstCode}`;
             }
-            this.endCall({ code, details, metadata: new metadata_1.Metadata(), rstCode: http2Stream.rstCode });
+            this.endCall({
+              code,
+              details,
+              metadata: new metadata_1.Metadata(),
+              rstCode: http2Stream.rstCode
+            });
           });
         });
         http2Stream.on("error", (err) => {
@@ -15132,15 +14953,17 @@ var require_subchannel_call = __commonJS({
       sendMessageWithContext(context, message) {
         this.trace("write() called with message of length " + message.length);
         const cb = (error) => {
-          var _a;
-          let code = constants_1.Status.UNAVAILABLE;
-          if ((error === null || error === void 0 ? void 0 : error.code) === "ERR_STREAM_WRITE_AFTER_END") {
-            code = constants_1.Status.INTERNAL;
-          }
-          if (error) {
-            this.cancelWithStatus(code, `Write error: ${error.message}`);
-          }
-          (_a = context.callback) === null || _a === void 0 ? void 0 : _a.call(context);
+          process.nextTick(() => {
+            var _a;
+            let code = constants_1.Status.UNAVAILABLE;
+            if ((error === null || error === void 0 ? void 0 : error.code) === "ERR_STREAM_WRITE_AFTER_END") {
+              code = constants_1.Status.INTERNAL;
+            }
+            if (error) {
+              this.cancelWithStatus(code, `Write error: ${error.message}`);
+            }
+            (_a = context.callback) === null || _a === void 0 ? void 0 : _a.call(context);
+          });
         };
         this.trace("sending data chunk of length " + message.length);
         this.callEventTracker.addMessageSent();
@@ -15183,7 +15006,7 @@ var require_package2 = __commonJS({
   "node_modules/@grpc/grpc-js/package.json"(exports2, module2) {
     module2.exports = {
       name: "@grpc/grpc-js",
-      version: "1.8.21",
+      version: "1.9.4",
       description: "gRPC Library for Node - pure JS implementation",
       homepage: "https://grpc.io/",
       repository: "https://github.com/grpc/grpc-node/tree/master/packages/grpc-js",
@@ -15205,9 +15028,15 @@ var require_package2 = __commonJS({
         "@types/ncp": "^2.0.1",
         "@types/pify": "^3.0.2",
         "@types/semver": "^7.3.9",
+        "@typescript-eslint/eslint-plugin": "^5.59.11",
+        "@typescript-eslint/parser": "^5.59.11",
+        "@typescript-eslint/typescript-estree": "^5.59.11",
         "clang-format": "^1.0.55",
+        eslint: "^8.42.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-prettier": "^4.2.1",
         execa: "^2.0.3",
-        gts: "^3.1.1",
         gulp: "^4.0.2",
         "gulp-mocha": "^6.0.0",
         lodash: "^4.17.4",
@@ -15215,10 +15044,11 @@ var require_package2 = __commonJS({
         "mocha-jenkins-reporter": "^0.4.1",
         ncp: "^2.0.0",
         pify: "^4.0.1",
+        prettier: "^2.8.8",
         rimraf: "^3.0.2",
         semver: "^7.3.5",
-        "ts-node": "^8.3.0",
-        typescript: "^4.8.4"
+        "ts-node": "^10.9.1",
+        typescript: "^5.1.3"
       },
       contributors: [
         {
@@ -15230,18 +15060,18 @@ var require_package2 = __commonJS({
         clean: "rimraf ./build",
         compile: "tsc -p .",
         format: 'clang-format -i -style="{Language: JavaScript, BasedOnStyle: Google, ColumnLimit: 80}" src/*.ts test/*.ts',
-        lint: "npm run check",
+        lint: "eslint src/*.ts test/*.ts",
         prepare: "npm run generate-types && npm run compile",
         test: "gulp test",
-        check: "gts check src/**/*.ts",
-        fix: "gts fix src/*.ts",
+        check: "npm run lint",
+        fix: "eslint --fix src/*.ts test/*.ts",
         pretest: "npm run generate-types && npm run generate-test-types && npm run compile",
         posttest: "npm run check && madge -c ./build/src",
         "generate-types": "proto-loader-gen-types --keepCase --longs String --enums String --defaults --oneofs --includeComments --includeDirs proto/ --include-dirs test/fixtures/ -O src/generated/ --grpcLib ../index channelz.proto",
         "generate-test-types": "proto-loader-gen-types --keepCase --longs String --enums String --defaults --oneofs --includeComments --include-dirs test/fixtures/ -O test/generated/ --grpcLib ../../src/index test_service.proto"
       },
       dependencies: {
-        "@grpc/proto-loader": "^0.7.0",
+        "@grpc/proto-loader": "^0.7.8",
         "@types/node": ">=12.12.47"
       },
       files: [
@@ -15474,6 +15304,10 @@ var require_transport = __commonJS({
         }
         try {
           this.session.ping((err, duration, payload) => {
+            if (err) {
+              this.keepaliveTrace("Ping failed with error " + err.message);
+              this.handleDisconnect();
+            }
             this.keepaliveTrace("Received ping response");
             this.clearKeepaliveTimeout();
             this.maybeStartKeepalivePingTimer();
@@ -15617,7 +15451,7 @@ var require_transport = __commonJS({
         this.isShutdown = false;
       }
       trace(text) {
-        logging.trace(constants_1.LogVerbosity.DEBUG, TRACER_NAME, this.channelTarget + " " + text);
+        logging.trace(constants_1.LogVerbosity.DEBUG, TRACER_NAME, (0, uri_parser_1.uriToString)(this.channelTarget) + " " + text);
       }
       createSession(address, credentials, options, proxyConnectionResult) {
         if (this.isShutdown) {
@@ -15668,7 +15502,7 @@ var require_transport = __commonJS({
               }
             };
           }
-          connectionOptions = Object.assign(Object.assign({}, connectionOptions), address);
+          connectionOptions = Object.assign(Object.assign(Object.assign({}, connectionOptions), address), { enableTrace: options["grpc-node.tls_enable_trace"] === 1 });
           const session = http2.connect(addressScheme + targetAuthority, connectionOptions);
           this.session = session;
           session.unref();
@@ -15708,6 +15542,9 @@ var require_transport = __commonJS({
               const hostPort = (0, uri_parser_1.splitHostPort)(targetPath);
               connectionOptions.servername = (_b = hostPort === null || hostPort === void 0 ? void 0 : hostPort.host) !== null && _b !== void 0 ? _b : targetPath;
             }
+          }
+          if (options["grpc-node.tls_enable_trace"]) {
+            connectionOptions.enableTrace = true;
           }
         }
         return (0, http_proxy_1.getProxiedConnection)(address, options, connectionOptions).then((result) => this.createSession(address, credentials, options, result));
@@ -15903,7 +15740,7 @@ var require_compression_algorithms = __commonJS({
       CompressionAlgorithms2[CompressionAlgorithms2["identity"] = 0] = "identity";
       CompressionAlgorithms2[CompressionAlgorithms2["deflate"] = 1] = "deflate";
       CompressionAlgorithms2[CompressionAlgorithms2["gzip"] = 2] = "gzip";
-    })(CompressionAlgorithms = exports2.CompressionAlgorithms || (exports2.CompressionAlgorithms = {}));
+    })(CompressionAlgorithms || (exports2.CompressionAlgorithms = CompressionAlgorithms = {}));
   }
 });
 
@@ -16388,6 +16225,10 @@ var require_load_balancing_call = __commonJS({
           case picker_1.PickResultType.COMPLETE:
             this.credentials.generateMetadata({ service_url: this.serviceUrl }).then((credsMetadata) => {
               var _a2, _b2, _c;
+              if (this.ended) {
+                this.trace("Credentials metadata generation finished after call ended");
+                return;
+              }
               const finalMetadata = this.metadata.clone();
               finalMetadata.merge(credsMetadata);
               if (finalMetadata.get("authorization").length > 1) {
@@ -16719,7 +16560,11 @@ var require_resolving_call = __commonJS({
         var _a;
         this.trace("cancelWithStatus code: " + status + ' details: "' + details + '"');
         (_a = this.child) === null || _a === void 0 ? void 0 : _a.cancelWithStatus(status, details);
-        this.outputStatus({ code: status, details, metadata: new metadata_1.Metadata() });
+        this.outputStatus({
+          code: status,
+          details,
+          metadata: new metadata_1.Metadata()
+        });
       }
       getPeer() {
         var _a, _b;
@@ -16910,7 +16755,10 @@ var require_retrying_call = __commonJS({
       }
       getBufferEntry(messageIndex) {
         var _a;
-        return (_a = this.writeBuffer[messageIndex - this.writeBufferOffset]) !== null && _a !== void 0 ? _a : { entryType: "FREED", allocated: false };
+        return (_a = this.writeBuffer[messageIndex - this.writeBufferOffset]) !== null && _a !== void 0 ? _a : {
+          entryType: "FREED",
+          allocated: false
+        };
       }
       getNextBufferIndex() {
         return this.writeBufferOffset + this.writeBuffer.length;
@@ -17116,7 +16964,6 @@ var require_retrying_call = __commonJS({
               this.transparentRetryUsed = true;
               this.startNewAttempt();
             }
-            ;
             break;
           case "DROP":
             this.commitCall(callIndex);
@@ -17168,7 +17015,11 @@ var require_retrying_call = __commonJS({
         const child = this.channel.createLoadBalancingCall(this.callConfig, this.methodName, this.host, this.credentials, this.deadline);
         this.trace("Created child call [" + child.getCallNumber() + "] for attempt " + this.attempts);
         const index = this.underlyingCalls.length;
-        this.underlyingCalls.push({ state: "ACTIVE", call: child, nextMessageToSend: 0 });
+        this.underlyingCalls.push({
+          state: "ACTIVE",
+          call: child,
+          nextMessageToSend: 0
+        });
         const previousAttempts = this.attempts - 1;
         const initialMetadata = this.initialMetadata.clone();
         if (previousAttempts > 0) {
@@ -17366,6 +17217,9 @@ var require_subchannel_interface = __commonJS({
       getRealSubchannel() {
         return this.child.getRealSubchannel();
       }
+      realSubchannelEquals(other) {
+        return this.getRealSubchannel() === other.getRealSubchannel();
+      }
     };
     exports2.BaseSubchannelWrapper = BaseSubchannelWrapper;
   }
@@ -17399,6 +17253,8 @@ var require_internal_channel = __commonJS({
     var retrying_call_1 = require_retrying_call();
     var subchannel_interface_1 = require_subchannel_interface();
     var MAX_TIMEOUT_TIME = 2147483647;
+    var MIN_IDLE_TIMEOUT_MS = 1e3;
+    var DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1e3;
     var RETRY_THROTTLER_MAP = /* @__PURE__ */ new Map();
     var DEFAULT_RETRY_BUFFER_SIZE_BYTES = 1 << 24;
     var DEFAULT_PER_RPC_RETRY_BUFFER_SIZE_BYTES = 1 << 20;
@@ -17427,7 +17283,7 @@ var require_internal_channel = __commonJS({
     };
     var InternalChannel = class {
       constructor(target, credentials, options) {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         this.credentials = credentials;
         this.options = options;
         this.connectivityState = connectivity_state_1.ConnectivityState.IDLE;
@@ -17438,6 +17294,8 @@ var require_internal_channel = __commonJS({
         this.configSelector = null;
         this.currentResolutionError = null;
         this.wrappedSubchannels = /* @__PURE__ */ new Set();
+        this.callCount = 0;
+        this.idleTimer = null;
         this.channelzEnabled = true;
         this.callTracker = new channelz_1.ChannelzCallTracker();
         this.childrenTracker = new channelz_1.ChannelzChildrenTracker();
@@ -17483,6 +17341,7 @@ var require_internal_channel = __commonJS({
         this.subchannelPool = (0, subchannel_pool_1.getSubchannelPool)(((_c = options["grpc.use_local_subchannel_pool"]) !== null && _c !== void 0 ? _c : 0) === 0);
         this.retryBufferTracker = new retrying_call_1.MessageBufferTracker((_d = options["grpc.retry_buffer_size"]) !== null && _d !== void 0 ? _d : DEFAULT_RETRY_BUFFER_SIZE_BYTES, (_e = options["grpc.per_rpc_retry_buffer_size"]) !== null && _e !== void 0 ? _e : DEFAULT_PER_RPC_RETRY_BUFFER_SIZE_BYTES);
         this.keepaliveTime = (_f = options["grpc.keepalive_time_ms"]) !== null && _f !== void 0 ? _f : -1;
+        this.idleTimeoutMs = Math.max((_g = options["grpc.client_idle_timeout_ms"]) !== null && _g !== void 0 ? _g : DEFAULT_IDLE_TIMEOUT_MS, MIN_IDLE_TIMEOUT_MS);
         const channelControlHelper = {
           createSubchannel: (subchannelAddress, subchannelArgs) => {
             const subchannel = this.subchannelPool.getOrCreateSubchannel(this.target, subchannelAddress, Object.assign({}, this.options, subchannelArgs), this.credentials);
@@ -17561,7 +17420,7 @@ var require_internal_channel = __commonJS({
         ]);
         this.trace("Channel constructed with options " + JSON.stringify(options, void 0, 2));
         const error = new Error();
-        (0, logging_1.trace)(constants_1.LogVerbosity.DEBUG, "channel_stacktrace", "(" + this.channelzRef.id + ") Channel constructed \n" + ((_g = error.stack) === null || _g === void 0 ? void 0 : _g.substring(error.stack.indexOf("\n") + 1)));
+        (0, logging_1.trace)(constants_1.LogVerbosity.DEBUG, "channel_stacktrace", "(" + this.channelzRef.id + ") Channel constructed \n" + ((_h = error.stack) === null || _h === void 0 ? void 0 : _h.substring(error.stack.indexOf("\n") + 1)));
       }
       getChannelzInfo() {
         return {
@@ -17598,7 +17457,7 @@ var require_internal_channel = __commonJS({
       updateState(newState) {
         (0, logging_1.trace)(constants_1.LogVerbosity.DEBUG, "connectivity_state", "(" + this.channelzRef.id + ") " + (0, uri_parser_1.uriToString)(this.target) + " " + connectivity_state_1.ConnectivityState[this.connectivityState] + " -> " + connectivity_state_1.ConnectivityState[newState]);
         if (this.channelzEnabled) {
-          this.channelzTrace.addTrace("CT_INFO", connectivity_state_1.ConnectivityState[this.connectivityState] + " -> " + connectivity_state_1.ConnectivityState[newState]);
+          this.channelzTrace.addTrace("CT_INFO", "Connectivity state change to " + connectivity_state_1.ConnectivityState[newState]);
         }
         this.connectivityState = newState;
         const watchersCopy = this.connectivityStateWatchers.slice();
@@ -17627,7 +17486,10 @@ var require_internal_channel = __commonJS({
         this.wrappedSubchannels.delete(wrappedSubchannel);
       }
       doPick(metadata, extraPickInfo) {
-        return this.currentPicker.pick({ metadata, extraPickInfo });
+        return this.currentPicker.pick({
+          metadata,
+          extraPickInfo
+        });
       }
       queueCallForPick(call) {
         this.pickQueue.push(call);
@@ -17657,6 +17519,42 @@ var require_internal_channel = __commonJS({
         this.configSelectionQueue.push(call);
         this.callRefTimerRef();
       }
+      enterIdle() {
+        this.resolvingLoadBalancer.destroy();
+        this.updateState(connectivity_state_1.ConnectivityState.IDLE);
+        this.currentPicker = new picker_1.QueuePicker(this.resolvingLoadBalancer);
+      }
+      maybeStartIdleTimer() {
+        var _a, _b;
+        if (this.callCount === 0) {
+          this.idleTimer = setTimeout(() => {
+            this.trace("Idle timer triggered after " + this.idleTimeoutMs + "ms of inactivity");
+            this.enterIdle();
+          }, this.idleTimeoutMs);
+          (_b = (_a = this.idleTimer).unref) === null || _b === void 0 ? void 0 : _b.call(_a);
+        }
+      }
+      onCallStart() {
+        if (this.channelzEnabled) {
+          this.callTracker.addCallStarted();
+        }
+        this.callCount += 1;
+        if (this.idleTimer) {
+          clearTimeout(this.idleTimer);
+          this.idleTimer = null;
+        }
+      }
+      onCallEnd(status) {
+        if (this.channelzEnabled) {
+          if (status.code === constants_1.Status.OK) {
+            this.callTracker.addCallSucceeded();
+          } else {
+            this.callTracker.addCallFailed();
+          }
+        }
+        this.callCount -= 1;
+        this.maybeStartIdleTimer();
+      }
       createLoadBalancingCall(callConfig, method, host, credentials, deadline) {
         const callNumber = (0, call_number_1.getNextCallNumber)();
         this.trace("createLoadBalancingCall [" + callNumber + '] method="' + method + '"');
@@ -17684,16 +17582,10 @@ var require_internal_channel = __commonJS({
           parentCall
         };
         const call = new resolving_call_1.ResolvingCall(this, method, finalOptions, this.filterStackFactory.clone(), this.credentials._getCallCredentials(), callNumber);
-        if (this.channelzEnabled) {
-          this.callTracker.addCallStarted();
-          call.addStatusWatcher((status) => {
-            if (status.code === constants_1.Status.OK) {
-              this.callTracker.addCallSucceeded();
-            } else {
-              this.callTracker.addCallFailed();
-            }
-          });
-        }
+        this.onCallStart();
+        call.addStatusWatcher((status) => {
+          this.onCallEnd(status);
+        });
         return call;
       }
       close() {
@@ -17712,6 +17604,7 @@ var require_internal_channel = __commonJS({
         const connectivityState = this.connectivityState;
         if (tryToConnect) {
           this.resolvingLoadBalancer.exitIdle();
+          this.maybeStartIdleTimer();
         }
         return connectivityState;
       }
@@ -18053,6 +17946,8 @@ var require_server_call = __commonJS({
               details: "Cancelled by client",
               metadata: null
             });
+            if (this.deadlineTimer)
+              clearTimeout(this.deadlineTimer);
           }
         });
         this.stream.on("drain", () => {
@@ -18122,64 +18017,69 @@ var require_server_call = __commonJS({
         metadata.remove("grpc-accept-encoding");
         return metadata;
       }
-      receiveUnaryMessage(encoding, next) {
-        const { stream } = this;
-        let receivedLength = 0;
-        const call = this;
-        const body = [];
-        const limit = this.maxReceiveMessageSize;
-        stream.on("data", onData);
-        stream.on("end", onEnd);
-        stream.on("error", onEnd);
-        function onData(chunk) {
-          receivedLength += chunk.byteLength;
-          if (limit !== -1 && receivedLength > limit) {
+      receiveUnaryMessage(encoding) {
+        return new Promise((resolve, reject) => {
+          const { stream } = this;
+          let receivedLength = 0;
+          const call = this;
+          const body = [];
+          const limit = this.maxReceiveMessageSize;
+          this.stream.on("data", onData);
+          this.stream.on("end", onEnd);
+          this.stream.on("error", onEnd);
+          function onData(chunk) {
+            receivedLength += chunk.byteLength;
+            if (limit !== -1 && receivedLength > limit) {
+              stream.removeListener("data", onData);
+              stream.removeListener("end", onEnd);
+              stream.removeListener("error", onEnd);
+              reject({
+                code: constants_1.Status.RESOURCE_EXHAUSTED,
+                details: `Received message larger than max (${receivedLength} vs. ${limit})`
+              });
+              return;
+            }
+            body.push(chunk);
+          }
+          function onEnd(err) {
             stream.removeListener("data", onData);
             stream.removeListener("end", onEnd);
             stream.removeListener("error", onEnd);
-            next({
-              code: constants_1.Status.RESOURCE_EXHAUSTED,
-              details: `Received message larger than max (${receivedLength} vs. ${limit})`
-            });
-            return;
+            if (err !== void 0) {
+              reject({ code: constants_1.Status.INTERNAL, details: err.message });
+              return;
+            }
+            if (receivedLength === 0) {
+              reject({
+                code: constants_1.Status.INTERNAL,
+                details: "received empty unary message"
+              });
+              return;
+            }
+            call.emit("receiveMessage");
+            const requestBytes = Buffer.concat(body, receivedLength);
+            const compressed = requestBytes.readUInt8(0) === 1;
+            const compressedMessageEncoding = compressed ? encoding : "identity";
+            const decompressedMessage = call.getDecompressedMessage(requestBytes, compressedMessageEncoding);
+            if (Buffer.isBuffer(decompressedMessage)) {
+              resolve(call.deserializeMessageWithInternalError(decompressedMessage));
+              return;
+            }
+            decompressedMessage.then((decompressed) => resolve(call.deserializeMessageWithInternalError(decompressed)), (err2) => reject(err2.code ? err2 : {
+              code: constants_1.Status.INTERNAL,
+              details: `Received "grpc-encoding" header "${encoding}" but ${encoding} decompression failed`
+            }));
           }
-          body.push(chunk);
-        }
-        function onEnd(err) {
-          stream.removeListener("data", onData);
-          stream.removeListener("end", onEnd);
-          stream.removeListener("error", onEnd);
-          if (err !== void 0) {
-            next({ code: constants_1.Status.INTERNAL, details: err.message });
-            return;
-          }
-          if (receivedLength === 0) {
-            next({ code: constants_1.Status.INTERNAL, details: "received empty unary message" });
-            return;
-          }
-          call.emit("receiveMessage");
-          const requestBytes = Buffer.concat(body, receivedLength);
-          const compressed = requestBytes.readUInt8(0) === 1;
-          const compressedMessageEncoding = compressed ? encoding : "identity";
-          const decompressedMessage = call.getDecompressedMessage(requestBytes, compressedMessageEncoding);
-          if (Buffer.isBuffer(decompressedMessage)) {
-            call.safeDeserializeMessage(decompressedMessage, next);
-            return;
-          }
-          decompressedMessage.then((decompressed) => call.safeDeserializeMessage(decompressed, next), (err2) => next(err2.code ? err2 : {
-            code: constants_1.Status.INTERNAL,
-            details: `Received "grpc-encoding" header "${encoding}" but ${encoding} decompression failed`
-          }));
-        }
+        });
       }
-      safeDeserializeMessage(buffer, next) {
+      async deserializeMessageWithInternalError(buffer) {
         try {
-          next(null, this.deserializeMessage(buffer));
+          return this.deserializeMessage(buffer);
         } catch (err) {
-          next({
+          throw {
             details: (0, error_1.getErrorMessage)(err),
             code: constants_1.Status.INTERNAL
-          });
+          };
         }
       }
       serializeMessage(value) {
@@ -18712,6 +18612,7 @@ var require_server = __commonJS({
           let http2Server;
           if (creds._isSecure()) {
             const secureServerOptions = Object.assign(serverOptions, creds._getSettings());
+            secureServerOptions.enableTrace = this.options["grpc-node.tls_enable_trace"] === 1;
             http2Server = http2.createSecureServer(secureServerOptions);
             http2Server.on("secureConnection", (socket) => {
               socket.on("error", (e) => {
@@ -18760,8 +18661,7 @@ var require_server = __commonJS({
                     port: boundAddress.port
                   };
                 }
-                let channelzRef;
-                channelzRef = (0, channelz_1.registerChannelzSocket)((0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress), () => {
+                const channelzRef = (0, channelz_1.registerChannelzSocket)((0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress), () => {
                   return {
                     localAddress: boundSubchannelAddress,
                     remoteAddress: null,
@@ -18784,7 +18684,10 @@ var require_server = __commonJS({
                 if (this.channelzEnabled) {
                   this.listenerChildrenTracker.refChild(channelzRef);
                 }
-                this.http2ServerList.push({ server: http2Server, channelzRef });
+                this.http2ServerList.push({
+                  server: http2Server,
+                  channelzRef
+                });
                 this.trace("Successfully bound " + (0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress));
                 resolve("port" in boundSubchannelAddress ? boundSubchannelAddress.port : portNum);
                 http2Server.removeListener("error", onError);
@@ -18824,8 +18727,7 @@ var require_server = __commonJS({
                 host: boundAddress.address,
                 port: boundAddress.port
               };
-              let channelzRef;
-              channelzRef = (0, channelz_1.registerChannelzSocket)((0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress), () => {
+              const channelzRef = (0, channelz_1.registerChannelzSocket)((0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress), () => {
                 return {
                   localAddress: boundSubchannelAddress,
                   remoteAddress: null,
@@ -18848,7 +18750,10 @@ var require_server = __commonJS({
               if (this.channelzEnabled) {
                 this.listenerChildrenTracker.refChild(channelzRef);
               }
-              this.http2ServerList.push({ server: http2Server, channelzRef });
+              this.http2ServerList.push({
+                server: http2Server,
+                channelzRef
+              });
               this.trace("Successfully bound " + (0, subchannel_address_1.subchannelAddressToString)(boundSubchannelAddress));
               resolve(bindSpecificPort(addressList.slice(1), boundAddress.port, 1));
               http2Server.removeListener("error", onError);
@@ -19131,8 +19036,7 @@ var require_server = __commonJS({
             session.destroy();
             return;
           }
-          let channelzRef;
-          channelzRef = (0, channelz_1.registerChannelzSocket)((_a = session.socket.remoteAddress) !== null && _a !== void 0 ? _a : "unknown", this.getChannelzSessionInfoGetter(session), this.channelzEnabled);
+          const channelzRef = (0, channelz_1.registerChannelzSocket)((_a = session.socket.remoteAddress) !== null && _a !== void 0 ? _a : "unknown", this.getChannelzSessionInfoGetter(session), this.channelzEnabled);
           const channelzSessionInfo = {
             ref: channelzRef,
             streamTracker: new channelz_1.ChannelzCallTracker(),
@@ -19213,20 +19117,19 @@ var require_server = __commonJS({
       }
     };
     exports2.Server = Server;
-    function handleUnary(call, handler, metadata, encoding) {
-      call.receiveUnaryMessage(encoding, (err, request) => {
-        if (err) {
-          call.sendError(err);
-          return;
-        }
+    async function handleUnary(call, handler, metadata, encoding) {
+      try {
+        const request = await call.receiveUnaryMessage(encoding);
         if (request === void 0 || call.cancelled) {
           return;
         }
         const emitter = new server_call_1.ServerUnaryCallImpl(call, metadata, request);
-        handler.func(emitter, (err2, value, trailer, flags) => {
-          call.sendUnaryMessage(err2, value, trailer, flags);
+        handler.func(emitter, (err, value, trailer, flags) => {
+          call.sendUnaryMessage(err, value, trailer, flags);
         });
-      });
+      } catch (err) {
+        call.sendError(err);
+      }
     }
     function handleClientStreaming(call, handler, metadata, encoding) {
       const stream = new server_call_1.ServerReadableStreamImpl(call, metadata, handler.deserialize, encoding);
@@ -19240,18 +19143,17 @@ var require_server = __commonJS({
       stream.on("error", respond);
       handler.func(stream, respond);
     }
-    function handleServerStreaming(call, handler, metadata, encoding) {
-      call.receiveUnaryMessage(encoding, (err, request) => {
-        if (err) {
-          call.sendError(err);
-          return;
-        }
+    async function handleServerStreaming(call, handler, metadata, encoding) {
+      try {
+        const request = await call.receiveUnaryMessage(encoding);
         if (request === void 0 || call.cancelled) {
           return;
         }
         const stream = new server_call_1.ServerWritableStreamImpl(call, metadata, handler.serialize, request);
         handler.func(stream);
-      });
+      } catch (err) {
+        call.sendError(err);
+      }
     }
     function handleBidiStreaming(call, handler, metadata, encoding) {
       const stream = new server_call_1.ServerDuplexStreamImpl(call, metadata, handler.serialize, handler.deserialize, encoding);
@@ -19884,7 +19786,7 @@ var require_experimental = __commonJS({
   "node_modules/@grpc/grpc-js/build/src/experimental.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.OutlierDetectionLoadBalancingConfig = exports2.BaseSubchannelWrapper = exports2.registerAdminService = exports2.FilterStackFactory = exports2.BaseFilter = exports2.PickResultType = exports2.QueuePicker = exports2.UnavailablePicker = exports2.ChildLoadBalancerHandler = exports2.subchannelAddressToString = exports2.validateLoadBalancingConfig = exports2.getFirstUsableConfig = exports2.registerLoadBalancerType = exports2.createChildChannelControlHelper = exports2.BackoffTimeout = exports2.durationToMs = exports2.uriToString = exports2.registerResolver = exports2.log = exports2.trace = void 0;
+    exports2.OutlierDetectionLoadBalancingConfig = exports2.BaseSubchannelWrapper = exports2.registerAdminService = exports2.FilterStackFactory = exports2.BaseFilter = exports2.PickResultType = exports2.QueuePicker = exports2.UnavailablePicker = exports2.ChildLoadBalancerHandler = exports2.subchannelAddressToString = exports2.validateLoadBalancingConfig = exports2.getFirstUsableConfig = exports2.registerLoadBalancerType = exports2.createChildChannelControlHelper = exports2.BackoffTimeout = exports2.durationToMs = exports2.uriToString = exports2.createResolver = exports2.registerResolver = exports2.log = exports2.trace = void 0;
     var logging_1 = require_logging();
     Object.defineProperty(exports2, "trace", { enumerable: true, get: function() {
       return logging_1.trace;
@@ -19895,6 +19797,9 @@ var require_experimental = __commonJS({
     var resolver_1 = require_resolver();
     Object.defineProperty(exports2, "registerResolver", { enumerable: true, get: function() {
       return resolver_1.registerResolver;
+    } });
+    Object.defineProperty(exports2, "createResolver", { enumerable: true, get: function() {
+      return resolver_1.createResolver;
     } });
     var uri_parser_1 = require_uri_parser();
     Object.defineProperty(exports2, "uriToString", { enumerable: true, get: function() {
@@ -20069,6 +19974,7 @@ var require_resolver_dns = __commonJS({
           });
           this.backoff.stop();
           this.backoff.reset();
+          this.stopNextResolutionTimer();
           return;
         }
         if (this.dnsHostname === null) {
@@ -20090,6 +19996,9 @@ var require_resolver_dns = __commonJS({
           const hostname = this.dnsHostname;
           this.pendingLookupPromise = dnsLookupPromise(hostname, { all: true });
           this.pendingLookupPromise.then((addressList) => {
+            if (this.pendingLookupPromise === null) {
+              return;
+            }
             this.pendingLookupPromise = null;
             this.backoff.reset();
             this.backoff.stop();
@@ -20104,6 +20013,9 @@ var require_resolver_dns = __commonJS({
             }
             this.listener.onSuccessfulResolution(this.latestLookupResult, this.latestServiceConfig, this.latestServiceConfigError, null, {});
           }, (err) => {
+            if (this.pendingLookupPromise === null) {
+              return;
+            }
             trace("Resolution error for target " + (0, uri_parser_1.uriToString)(this.target) + ": " + err.message);
             this.pendingLookupPromise = null;
             this.stopNextResolutionTimer();
@@ -20112,6 +20024,9 @@ var require_resolver_dns = __commonJS({
           if (this.isServiceConfigEnabled && this.pendingTxtPromise === null) {
             this.pendingTxtPromise = resolveTxtPromise(hostname);
             this.pendingTxtPromise.then((txtRecord) => {
+              if (this.pendingTxtPromise === null) {
+                return;
+              }
               this.pendingTxtPromise = null;
               try {
                 this.latestServiceConfig = (0, service_config_1.extractAndSelectServiceConfig)(txtRecord, this.percentage);
@@ -20148,24 +20063,40 @@ var require_resolver_dns = __commonJS({
       startResolutionWithBackoff() {
         if (this.pendingLookupPromise === null) {
           this.continueResolving = false;
-          this.startResolution();
           this.backoff.runOnce();
           this.startNextResolutionTimer();
+          this.startResolution();
         }
       }
       updateResolution() {
         if (this.pendingLookupPromise === null) {
           if (this.isNextResolutionTimerRunning || this.backoff.isRunning()) {
+            if (this.isNextResolutionTimerRunning) {
+              trace('resolution update delayed by "min time between resolutions" rate limit');
+            } else {
+              trace("resolution update delayed by backoff timer until " + this.backoff.getEndTime().toISOString());
+            }
             this.continueResolving = true;
           } else {
             this.startResolutionWithBackoff();
           }
         }
       }
+      /**
+       * Reset the resolver to the same state it had when it was created. In-flight
+       * DNS requests cannot be cancelled, but they are discarded and their results
+       * will be ignored.
+       */
       destroy() {
         this.continueResolving = false;
+        this.backoff.reset();
         this.backoff.stop();
         this.stopNextResolutionTimer();
+        this.pendingLookupPromise = null;
+        this.pendingTxtPromise = null;
+        this.latestLookupResult = null;
+        this.latestServiceConfig = null;
+        this.latestServiceConfigError = null;
       }
       /**
        * Get the default authority for the given target. For IP targets, that is
@@ -20309,11 +20240,10 @@ var require_load_balancer_pick_first = __commonJS({
   "node_modules/@grpc/grpc-js/build/src/load-balancer-pick-first.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.setup = exports2.PickFirstLoadBalancer = exports2.PickFirstLoadBalancingConfig = void 0;
+    exports2.setup = exports2.PickFirstLoadBalancer = exports2.shuffled = exports2.PickFirstLoadBalancingConfig = void 0;
     var load_balancer_1 = require_load_balancer();
     var connectivity_state_1 = require_connectivity_state();
     var picker_1 = require_picker();
-    var subchannel_address_1 = require_subchannel_address();
     var logging = require_logging();
     var constants_1 = require_constants();
     var TRACER_NAME = "pick_first";
@@ -20323,19 +20253,28 @@ var require_load_balancer_pick_first = __commonJS({
     var TYPE_NAME = "pick_first";
     var CONNECTION_DELAY_INTERVAL_MS = 250;
     var PickFirstLoadBalancingConfig = class _PickFirstLoadBalancingConfig {
+      constructor(shuffleAddressList) {
+        this.shuffleAddressList = shuffleAddressList;
+      }
       getLoadBalancerName() {
         return TYPE_NAME;
       }
-      constructor() {
-      }
       toJsonObject() {
         return {
-          [TYPE_NAME]: {}
+          [TYPE_NAME]: {
+            shuffleAddressList: this.shuffleAddressList
+          }
         };
+      }
+      getShuffleAddressList() {
+        return this.shuffleAddressList;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       static createFromJson(obj) {
-        return new _PickFirstLoadBalancingConfig();
+        if ("shuffleAddressList" in obj && !(typeof obj.shuffleAddressList === "boolean")) {
+          throw new Error("pick_first config field shuffleAddressList must be a boolean if provided");
+        }
+        return new _PickFirstLoadBalancingConfig(obj.shuffleAddressList === true);
       }
     };
     exports2.PickFirstLoadBalancingConfig = PickFirstLoadBalancingConfig;
@@ -20353,6 +20292,17 @@ var require_load_balancer_pick_first = __commonJS({
         };
       }
     };
+    function shuffled(list) {
+      const result = list.slice();
+      for (let i = result.length - 1; i > 1; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = result[i];
+        result[i] = result[j];
+        result[j] = temp;
+      }
+      return result;
+    }
+    exports2.shuffled = shuffled;
     var PickFirstLoadBalancer = class {
       /**
        * Load balancer that attempts to connect to each backend in the address list
@@ -20363,97 +20313,93 @@ var require_load_balancer_pick_first = __commonJS({
        */
       constructor(channelControlHelper) {
         this.channelControlHelper = channelControlHelper;
-        this.latestAddressList = [];
-        this.subchannels = [];
+        this.children = [];
         this.currentState = connectivity_state_1.ConnectivityState.IDLE;
         this.currentSubchannelIndex = 0;
         this.currentPick = null;
-        this.triedAllSubchannels = false;
-        this.subchannelStateCounts = {
-          [connectivity_state_1.ConnectivityState.CONNECTING]: 0,
-          [connectivity_state_1.ConnectivityState.IDLE]: 0,
-          [connectivity_state_1.ConnectivityState.READY]: 0,
-          [connectivity_state_1.ConnectivityState.SHUTDOWN]: 0,
-          [connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE]: 0
-        };
         this.subchannelStateListener = (subchannel, previousState, newState) => {
-          this.subchannelStateCounts[previousState] -= 1;
-          this.subchannelStateCounts[newState] += 1;
-          if (subchannel.getRealSubchannel() === this.subchannels[this.currentSubchannelIndex].getRealSubchannel() && newState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
-            this.startNextSubchannelConnecting();
-          }
-          if (newState === connectivity_state_1.ConnectivityState.READY) {
-            this.pickSubchannel(subchannel);
-            return;
-          } else {
-            if (this.triedAllSubchannels && this.subchannelStateCounts[connectivity_state_1.ConnectivityState.IDLE] === this.subchannels.length) {
-              this.resetSubchannelList(false);
-              this.updateState(connectivity_state_1.ConnectivityState.IDLE, new picker_1.QueuePicker(this));
-              return;
-            }
-            if (this.currentPick === null) {
-              if (this.triedAllSubchannels) {
-                let newLBState;
-                if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.CONNECTING] > 0) {
-                  newLBState = connectivity_state_1.ConnectivityState.CONNECTING;
-                } else if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE] > 0) {
-                  newLBState = connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE;
-                } else {
-                  newLBState = connectivity_state_1.ConnectivityState.IDLE;
-                }
-                if (newLBState !== this.currentState) {
-                  if (newLBState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
-                    this.updateState(newLBState, new picker_1.UnavailablePicker());
-                  } else {
-                    this.updateState(newLBState, new picker_1.QueuePicker(this));
-                  }
-                }
-              } else {
-                this.updateState(connectivity_state_1.ConnectivityState.CONNECTING, new picker_1.QueuePicker(this));
-              }
-            }
-          }
+          this.onSubchannelStateUpdate(subchannel, previousState, newState);
         };
-        this.pickedSubchannelStateListener = (subchannel, previousState, newState) => {
-          if (newState !== connectivity_state_1.ConnectivityState.READY) {
-            this.currentPick = null;
-            subchannel.unref();
-            subchannel.removeConnectivityStateListener(this.pickedSubchannelStateListener);
-            this.channelControlHelper.removeChannelzChild(subchannel.getChannelzRef());
-            if (this.subchannels.length > 0) {
-              if (this.triedAllSubchannels) {
-                let newLBState;
-                if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.CONNECTING] > 0) {
-                  newLBState = connectivity_state_1.ConnectivityState.CONNECTING;
-                } else if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE] > 0) {
-                  newLBState = connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE;
-                } else {
-                  newLBState = connectivity_state_1.ConnectivityState.IDLE;
-                }
-                if (newLBState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
-                  this.updateState(newLBState, new picker_1.UnavailablePicker());
-                } else {
-                  this.updateState(newLBState, new picker_1.QueuePicker(this));
-                }
-              } else {
-                this.updateState(connectivity_state_1.ConnectivityState.CONNECTING, new picker_1.QueuePicker(this));
-              }
-            } else {
-              this.updateState(connectivity_state_1.ConnectivityState.IDLE, new picker_1.QueuePicker(this));
-            }
-          }
-        };
+        this.triedAllSubchannels = false;
+        this.stickyTransientFailureMode = false;
         this.connectionDelayTimeout = setTimeout(() => {
         }, 0);
         clearTimeout(this.connectionDelayTimeout);
       }
-      startNextSubchannelConnecting() {
-        if (this.triedAllSubchannels) {
+      allChildrenHaveReportedTF() {
+        return this.children.every((child) => child.hasReportedTransientFailure);
+      }
+      calculateAndReportNewState() {
+        if (this.currentPick) {
+          this.updateState(connectivity_state_1.ConnectivityState.READY, new PickFirstPicker(this.currentPick));
+        } else if (this.children.length === 0) {
+          this.updateState(connectivity_state_1.ConnectivityState.IDLE, new picker_1.QueuePicker(this));
+        } else {
+          if (this.stickyTransientFailureMode) {
+            this.updateState(connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE, new picker_1.UnavailablePicker());
+          } else {
+            this.updateState(connectivity_state_1.ConnectivityState.CONNECTING, new picker_1.QueuePicker(this));
+          }
+        }
+      }
+      maybeEnterStickyTransientFailureMode() {
+        if (this.stickyTransientFailureMode) {
           return;
         }
-        for (const [index, subchannel] of this.subchannels.entries()) {
-          if (index > this.currentSubchannelIndex) {
-            const subchannelState = subchannel.getConnectivityState();
+        if (!this.allChildrenHaveReportedTF()) {
+          return;
+        }
+        this.stickyTransientFailureMode = true;
+        this.channelControlHelper.requestReresolution();
+        for (const { subchannel } of this.children) {
+          subchannel.startConnecting();
+        }
+        this.calculateAndReportNewState();
+      }
+      removeCurrentPick() {
+        if (this.currentPick !== null) {
+          const currentPick = this.currentPick;
+          this.currentPick = null;
+          currentPick.unref();
+          currentPick.removeConnectivityStateListener(this.subchannelStateListener);
+          this.channelControlHelper.removeChannelzChild(currentPick.getChannelzRef());
+        }
+      }
+      onSubchannelStateUpdate(subchannel, previousState, newState) {
+        var _a;
+        if ((_a = this.currentPick) === null || _a === void 0 ? void 0 : _a.realSubchannelEquals(subchannel)) {
+          if (newState !== connectivity_state_1.ConnectivityState.READY) {
+            this.removeCurrentPick();
+            this.calculateAndReportNewState();
+            this.channelControlHelper.requestReresolution();
+          }
+          return;
+        }
+        for (const [index, child] of this.children.entries()) {
+          if (subchannel.realSubchannelEquals(child.subchannel)) {
+            if (newState === connectivity_state_1.ConnectivityState.READY) {
+              this.pickSubchannel(child.subchannel);
+            }
+            if (newState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
+              child.hasReportedTransientFailure = true;
+              this.maybeEnterStickyTransientFailureMode();
+              if (index === this.currentSubchannelIndex) {
+                this.startNextSubchannelConnecting(index + 1);
+              }
+            }
+            child.subchannel.startConnecting();
+            return;
+          }
+        }
+      }
+      startNextSubchannelConnecting(startIndex) {
+        clearTimeout(this.connectionDelayTimeout);
+        if (this.triedAllSubchannels || this.stickyTransientFailureMode) {
+          return;
+        }
+        for (const [index, child] of this.children.entries()) {
+          if (index >= startIndex) {
+            const subchannelState = child.subchannel.getConnectivityState();
             if (subchannelState === connectivity_state_1.ConnectivityState.IDLE || subchannelState === connectivity_state_1.ConnectivityState.CONNECTING) {
               this.startConnecting(index);
               return;
@@ -20461,126 +20407,101 @@ var require_load_balancer_pick_first = __commonJS({
           }
         }
         this.triedAllSubchannels = true;
+        this.maybeEnterStickyTransientFailureMode();
       }
       /**
        * Have a single subchannel in the `subchannels` list start connecting.
        * @param subchannelIndex The index into the `subchannels` list.
        */
       startConnecting(subchannelIndex) {
+        var _a, _b;
         clearTimeout(this.connectionDelayTimeout);
         this.currentSubchannelIndex = subchannelIndex;
-        if (this.subchannels[subchannelIndex].getConnectivityState() === connectivity_state_1.ConnectivityState.IDLE) {
-          trace("Start connecting to subchannel with address " + this.subchannels[subchannelIndex].getAddress());
+        if (this.children[subchannelIndex].subchannel.getConnectivityState() === connectivity_state_1.ConnectivityState.IDLE) {
+          trace("Start connecting to subchannel with address " + this.children[subchannelIndex].subchannel.getAddress());
           process.nextTick(() => {
-            this.subchannels[subchannelIndex].startConnecting();
+            var _a2;
+            (_a2 = this.children[subchannelIndex]) === null || _a2 === void 0 ? void 0 : _a2.subchannel.startConnecting();
           });
         }
-        this.connectionDelayTimeout = setTimeout(() => {
-          this.startNextSubchannelConnecting();
-        }, CONNECTION_DELAY_INTERVAL_MS);
+        this.connectionDelayTimeout = (_b = (_a = setTimeout(() => {
+          this.startNextSubchannelConnecting(subchannelIndex + 1);
+        }, CONNECTION_DELAY_INTERVAL_MS)).unref) === null || _b === void 0 ? void 0 : _b.call(_a);
       }
       pickSubchannel(subchannel) {
+        if (this.currentPick && subchannel.realSubchannelEquals(this.currentPick)) {
+          return;
+        }
         trace("Pick subchannel with address " + subchannel.getAddress());
+        this.stickyTransientFailureMode = false;
         if (this.currentPick !== null) {
           this.currentPick.unref();
-          this.currentPick.removeConnectivityStateListener(this.pickedSubchannelStateListener);
+          this.channelControlHelper.removeChannelzChild(this.currentPick.getChannelzRef());
+          this.currentPick.removeConnectivityStateListener(this.subchannelStateListener);
         }
         this.currentPick = subchannel;
-        subchannel.addConnectivityStateListener(this.pickedSubchannelStateListener);
         subchannel.ref();
         this.channelControlHelper.addChannelzChild(subchannel.getChannelzRef());
         this.resetSubchannelList();
         clearTimeout(this.connectionDelayTimeout);
-        this.updateState(connectivity_state_1.ConnectivityState.READY, new PickFirstPicker(subchannel));
+        this.calculateAndReportNewState();
       }
       updateState(newState, picker) {
         trace(connectivity_state_1.ConnectivityState[this.currentState] + " -> " + connectivity_state_1.ConnectivityState[newState]);
         this.currentState = newState;
         this.channelControlHelper.updateState(newState, picker);
       }
-      resetSubchannelList(resetTriedAllSubchannels = true) {
-        for (const subchannel of this.subchannels) {
-          subchannel.removeConnectivityStateListener(this.subchannelStateListener);
-          subchannel.unref();
-          this.channelControlHelper.removeChannelzChild(subchannel.getChannelzRef());
+      resetSubchannelList() {
+        for (const child of this.children) {
+          if (child.subchannel !== this.currentPick) {
+            child.subchannel.removeConnectivityStateListener(this.subchannelStateListener);
+          }
+          child.subchannel.unref();
+          this.channelControlHelper.removeChannelzChild(child.subchannel.getChannelzRef());
         }
         this.currentSubchannelIndex = 0;
-        this.subchannelStateCounts = {
-          [connectivity_state_1.ConnectivityState.CONNECTING]: 0,
-          [connectivity_state_1.ConnectivityState.IDLE]: 0,
-          [connectivity_state_1.ConnectivityState.READY]: 0,
-          [connectivity_state_1.ConnectivityState.SHUTDOWN]: 0,
-          [connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE]: 0
-        };
-        this.subchannels = [];
-        if (resetTriedAllSubchannels) {
-          this.triedAllSubchannels = false;
-        }
+        this.children = [];
+        this.triedAllSubchannels = false;
       }
-      /**
-       * Start connecting to the address list most recently passed to
-       * `updateAddressList`.
-       */
-      connectToAddressList() {
-        this.resetSubchannelList();
-        trace("Connect to address list " + this.latestAddressList.map((address) => (0, subchannel_address_1.subchannelAddressToString)(address)));
-        this.subchannels = this.latestAddressList.map((address) => this.channelControlHelper.createSubchannel(address, {}));
-        for (const subchannel of this.subchannels) {
+      updateAddressList(addressList, lbConfig) {
+        if (!(lbConfig instanceof PickFirstLoadBalancingConfig)) {
+          return;
+        }
+        if (lbConfig.getShuffleAddressList()) {
+          addressList = shuffled(addressList);
+        }
+        const newChildrenList = addressList.map((address) => ({
+          subchannel: this.channelControlHelper.createSubchannel(address, {}),
+          hasReportedTransientFailure: false
+        }));
+        for (const { subchannel } of newChildrenList) {
           subchannel.ref();
           this.channelControlHelper.addChannelzChild(subchannel.getChannelzRef());
         }
-        for (const subchannel of this.subchannels) {
+        this.resetSubchannelList();
+        this.children = newChildrenList;
+        for (const { subchannel } of this.children) {
           subchannel.addConnectivityStateListener(this.subchannelStateListener);
-          this.subchannelStateCounts[subchannel.getConnectivityState()] += 1;
           if (subchannel.getConnectivityState() === connectivity_state_1.ConnectivityState.READY) {
             this.pickSubchannel(subchannel);
-            this.resetSubchannelList();
             return;
           }
         }
-        for (const [index, subchannel] of this.subchannels.entries()) {
-          const subchannelState = subchannel.getConnectivityState();
-          if (subchannelState === connectivity_state_1.ConnectivityState.IDLE || subchannelState === connectivity_state_1.ConnectivityState.CONNECTING) {
-            this.startConnecting(index);
-            if (this.currentPick === null) {
-              this.updateState(connectivity_state_1.ConnectivityState.CONNECTING, new picker_1.QueuePicker(this));
-            }
-            return;
+        for (const child of this.children) {
+          if (child.subchannel.getConnectivityState() === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
+            child.hasReportedTransientFailure = true;
           }
         }
-        if (this.currentPick === null) {
-          this.updateState(connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE, new picker_1.UnavailablePicker());
-        }
-      }
-      updateAddressList(addressList, lbConfig) {
-        if (this.subchannels.length === 0 || this.latestAddressList.length !== addressList.length || !this.latestAddressList.every((value, index) => addressList[index] && (0, subchannel_address_1.subchannelAddressEqual)(addressList[index], value))) {
-          this.latestAddressList = addressList;
-          this.connectToAddressList();
-        }
+        this.startNextSubchannelConnecting(0);
+        this.calculateAndReportNewState();
       }
       exitIdle() {
-        if (this.currentState === connectivity_state_1.ConnectivityState.IDLE || this.triedAllSubchannels) {
-          this.channelControlHelper.requestReresolution();
-        }
-        for (const subchannel of this.subchannels) {
-          subchannel.startConnecting();
-        }
-        if (this.currentState === connectivity_state_1.ConnectivityState.IDLE) {
-          if (this.latestAddressList.length > 0) {
-            this.connectToAddressList();
-          }
-        }
       }
       resetBackoff() {
       }
       destroy() {
         this.resetSubchannelList();
-        if (this.currentPick !== null) {
-          const currentPick = this.currentPick;
-          currentPick.unref();
-          currentPick.removeConnectivityStateListener(this.pickedSubchannelStateListener);
-          this.channelControlHelper.removeChannelzChild(currentPick.getChannelzRef());
-        }
+        this.removeCurrentPick();
       }
       getTypeName() {
         return TYPE_NAME;
@@ -20659,16 +20580,7 @@ var require_load_balancer_round_robin = __commonJS({
         this.subchannels = [];
         this.currentState = connectivity_state_1.ConnectivityState.IDLE;
         this.currentReadyPicker = null;
-        this.subchannelStateCounts = {
-          [connectivity_state_1.ConnectivityState.CONNECTING]: 0,
-          [connectivity_state_1.ConnectivityState.IDLE]: 0,
-          [connectivity_state_1.ConnectivityState.READY]: 0,
-          [connectivity_state_1.ConnectivityState.SHUTDOWN]: 0,
-          [connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE]: 0
-        };
         this.subchannelStateListener = (subchannel, previousState, newState) => {
-          this.subchannelStateCounts[previousState] -= 1;
-          this.subchannelStateCounts[newState] += 1;
           this.calculateAndUpdateState();
           if (newState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE || newState === connectivity_state_1.ConnectivityState.IDLE) {
             this.channelControlHelper.requestReresolution();
@@ -20676,8 +20588,11 @@ var require_load_balancer_round_robin = __commonJS({
           }
         };
       }
+      countSubchannelsWithState(state) {
+        return this.subchannels.filter((subchannel) => subchannel.getConnectivityState() === state).length;
+      }
       calculateAndUpdateState() {
-        if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.READY] > 0) {
+        if (this.countSubchannelsWithState(connectivity_state_1.ConnectivityState.READY) > 0) {
           const readySubchannels = this.subchannels.filter((subchannel) => subchannel.getConnectivityState() === connectivity_state_1.ConnectivityState.READY);
           let index = 0;
           if (this.currentReadyPicker !== null) {
@@ -20687,9 +20602,9 @@ var require_load_balancer_round_robin = __commonJS({
             }
           }
           this.updateState(connectivity_state_1.ConnectivityState.READY, new RoundRobinPicker(readySubchannels, index));
-        } else if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.CONNECTING] > 0) {
+        } else if (this.countSubchannelsWithState(connectivity_state_1.ConnectivityState.CONNECTING) > 0) {
           this.updateState(connectivity_state_1.ConnectivityState.CONNECTING, new picker_1.QueuePicker(this));
-        } else if (this.subchannelStateCounts[connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE] > 0) {
+        } else if (this.countSubchannelsWithState(connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) > 0) {
           this.updateState(connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE, new picker_1.UnavailablePicker());
         } else {
           this.updateState(connectivity_state_1.ConnectivityState.IDLE, new picker_1.QueuePicker(this));
@@ -20711,13 +20626,6 @@ var require_load_balancer_round_robin = __commonJS({
           subchannel.unref();
           this.channelControlHelper.removeChannelzChild(subchannel.getChannelzRef());
         }
-        this.subchannelStateCounts = {
-          [connectivity_state_1.ConnectivityState.CONNECTING]: 0,
-          [connectivity_state_1.ConnectivityState.IDLE]: 0,
-          [connectivity_state_1.ConnectivityState.READY]: 0,
-          [connectivity_state_1.ConnectivityState.SHUTDOWN]: 0,
-          [connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE]: 0
-        };
         this.subchannels = [];
       }
       updateAddressList(addressList, lbConfig) {
@@ -20729,7 +20637,6 @@ var require_load_balancer_round_robin = __commonJS({
           subchannel.addConnectivityStateListener(this.subchannelStateListener);
           this.channelControlHelper.addChannelzChild(subchannel.getChannelzRef());
           const subchannelState = subchannel.getConnectivityState();
-          this.subchannelStateCounts[subchannelState] += 1;
           if (subchannelState === connectivity_state_1.ConnectivityState.IDLE || subchannelState === connectivity_state_1.ConnectivityState.TRANSIENT_FAILURE) {
             subchannel.startConnecting();
           }
@@ -23764,9 +23671,6 @@ var require_lib2 = __commonJS({
       if (typeof agent === "function") {
         agent = agent(parsedURL);
       }
-      if (!headers.has("Connection") && !agent) {
-        headers.set("Connection", "close");
-      }
       return Object.assign({}, parsedURL, {
         method: request.method,
         headers: exportNodeCompatibleHeaders(headers),
@@ -24038,6 +23942,7 @@ var require_lib2 = __commonJS({
     exports2.Request = Request;
     exports2.Response = Response;
     exports2.FetchError = FetchError;
+    exports2.AbortError = AbortError;
   }
 });
 
@@ -24068,7 +23973,10 @@ var require_common2 = __commonJS({
         this.response = response;
         this.error = error;
         if (this.response) {
-          this.response.data = translateData(config.responseType, response === null || response === void 0 ? void 0 : response.data);
+          try {
+            this.response.data = translateData(config.responseType, response === null || response === void 0 ? void 0 : response.data);
+          } catch (_a) {
+          }
           this.status = this.response.status;
         }
         if (error && "code" in error && error.code) {
@@ -25362,7 +25270,11 @@ var require_dist2 = __commonJS({
         let socket;
         if (proxy.protocol === "https:") {
           debug("Creating `tls.Socket`: %o", this.connectOpts);
-          socket = tls.connect(this.connectOpts);
+          const servername = this.connectOpts.servername || this.connectOpts.host;
+          socket = tls.connect({
+            ...this.connectOpts,
+            servername: servername && net.isIP(servername) ? void 0 : servername
+          });
         } else {
           debug("Creating `net.Socket`: %o", this.connectOpts);
           socket = net.connect(this.connectOpts);
@@ -26053,10 +25965,10 @@ var require_bignumber = __commonJS({
           throw Error(bignumberError + "Invalid BigNumber: " + v);
         };
         BigNumber2.maximum = BigNumber2.max = function() {
-          return maxOrMin(arguments, P.lt);
+          return maxOrMin(arguments, -1);
         };
         BigNumber2.minimum = BigNumber2.min = function() {
-          return maxOrMin(arguments, P.gt);
+          return maxOrMin(arguments, 1);
         };
         BigNumber2.random = function() {
           var pow2_53 = 9007199254740992;
@@ -26415,18 +26327,15 @@ var require_bignumber = __commonJS({
           }
           return n.s < 0 && c0 ? "-" + str : str;
         }
-        function maxOrMin(args, method) {
-          var n, i = 1, m = new BigNumber2(args[0]);
+        function maxOrMin(args, n) {
+          var k, y, i = 1, x = new BigNumber2(args[0]);
           for (; i < args.length; i++) {
-            n = new BigNumber2(args[i]);
-            if (!n.s) {
-              m = n;
-              break;
-            } else if (method.call(m, n)) {
-              m = n;
+            y = new BigNumber2(args[i]);
+            if (!y.s || (k = compare(x, y)) === n || k === 0 && x.s === n) {
+              x = y;
             }
           }
-          return m;
+          return x;
         }
         function normalise(n, c, e) {
           var i = 1, j = c.length;
@@ -26482,7 +26391,7 @@ var require_bignumber = __commonJS({
                 i += LOG_BASE;
                 j = sd;
                 n = xc[ni = 0];
-                rd = n / pows10[d - j - 1] % 10 | 0;
+                rd = mathfloor(n / pows10[d - j - 1] % 10);
               } else {
                 ni = mathceil((i + 1) / LOG_BASE);
                 if (ni >= xc.length) {
@@ -26502,7 +26411,7 @@ var require_bignumber = __commonJS({
                     ;
                   i %= LOG_BASE;
                   j = i - LOG_BASE + d;
-                  rd = j < 0 ? 0 : n / pows10[d - j - 1] % 10 | 0;
+                  rd = j < 0 ? 0 : mathfloor(n / pows10[d - j - 1] % 10);
                 }
               }
               r = r || sd < 0 || // Are there any non-zero digits after the rounding digit?
@@ -46265,7 +46174,7 @@ var require_status = __commonJS({
       Status2[Status2["UNAVAILABLE"] = 14] = "UNAVAILABLE";
       Status2[Status2["DATA_LOSS"] = 15] = "DATA_LOSS";
       Status2[Status2["UNAUTHENTICATED"] = 16] = "UNAUTHENTICATED";
-    })(Status = exports2.Status || (exports2.Status = {}));
+    })(Status || (exports2.Status = Status = {}));
     exports2.HttpCodeToRpcCodeMap = /* @__PURE__ */ new Map([
       [400, Status.INVALID_ARGUMENT],
       [401, Status.UNAUTHENTICATED],
@@ -48265,9 +48174,6 @@ var require_lib3 = __commonJS({
       if (typeof agent === "function") {
         agent = agent(parsedURL);
       }
-      if (!headers.has("Connection") && !agent) {
-        headers.set("Connection", "close");
-      }
       return Object.assign({}, parsedURL, {
         method: request.method,
         headers: exportNodeCompatibleHeaders(headers),
@@ -48539,6 +48445,7 @@ var require_lib3 = __commonJS({
     exports2.Request = Request;
     exports2.Response = Response;
     exports2.FetchError = FetchError;
+    exports2.AbortError = AbortError;
   }
 });
 
@@ -49457,16 +49364,16 @@ var require_fallbackServiceStub = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/stream.js
+// node_modules/readable-stream/lib/internal/streams/stream.js
 var require_stream = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/stream.js"(exports2, module2) {
     module2.exports = require("stream");
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/buffer_list.js
+// node_modules/readable-stream/lib/internal/streams/buffer_list.js
 var require_buffer_list = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/buffer_list.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/buffer_list.js"(exports2, module2) {
     "use strict";
     function ownKeys(object, enumerableOnly) {
       var keys = Object.keys(object);
@@ -49726,9 +49633,9 @@ var require_buffer_list = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/destroy.js
+// node_modules/readable-stream/lib/internal/streams/destroy.js
 var require_destroy = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/destroy.js"(exports2, module2) {
     "use strict";
     function destroy(err, cb) {
       var _this = this;
@@ -49819,9 +49726,9 @@ var require_destroy = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/errors.js
+// node_modules/readable-stream/errors.js
 var require_errors = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/errors.js"(exports2, module2) {
+  "node_modules/readable-stream/errors.js"(exports2, module2) {
     "use strict";
     var codes = {};
     function createErrorType(code, message, Base) {
@@ -49919,9 +49826,9 @@ var require_errors = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/state.js
+// node_modules/readable-stream/lib/internal/streams/state.js
 var require_state = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/state.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/state.js"(exports2, module2) {
     "use strict";
     var ERR_INVALID_OPT_VALUE = require_errors().codes.ERR_INVALID_OPT_VALUE;
     function highWaterMarkFrom(options, isDuplex, duplexKey) {
@@ -49998,9 +49905,9 @@ var require_node2 = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/_stream_writable.js
+// node_modules/readable-stream/lib/_stream_writable.js
 var require_stream_writable = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/_stream_writable.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/_stream_writable.js"(exports2, module2) {
     "use strict";
     module2.exports = Writable;
     function CorkedRequest(state) {
@@ -50498,9 +50405,9 @@ var require_stream_writable = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/_stream_duplex.js
+// node_modules/readable-stream/lib/_stream_duplex.js
 var require_stream_duplex = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/_stream_duplex.js"(exports2, module2) {
     "use strict";
     var objectKeys = Object.keys || function(obj) {
       var keys2 = [];
@@ -50597,68 +50504,11 @@ var require_stream_duplex = __commonJS({
   }
 });
 
-// node_modules/string_decoder/node_modules/safe-buffer/index.js
-var require_safe_buffer2 = __commonJS({
-  "node_modules/string_decoder/node_modules/safe-buffer/index.js"(exports2, module2) {
-    var buffer = require("buffer");
-    var Buffer2 = buffer.Buffer;
-    function copyProps(src, dst) {
-      for (var key in src) {
-        dst[key] = src[key];
-      }
-    }
-    if (Buffer2.from && Buffer2.alloc && Buffer2.allocUnsafe && Buffer2.allocUnsafeSlow) {
-      module2.exports = buffer;
-    } else {
-      copyProps(buffer, exports2);
-      exports2.Buffer = SafeBuffer;
-    }
-    function SafeBuffer(arg, encodingOrOffset, length) {
-      return Buffer2(arg, encodingOrOffset, length);
-    }
-    copyProps(Buffer2, SafeBuffer);
-    SafeBuffer.from = function(arg, encodingOrOffset, length) {
-      if (typeof arg === "number") {
-        throw new TypeError("Argument must not be a number");
-      }
-      return Buffer2(arg, encodingOrOffset, length);
-    };
-    SafeBuffer.alloc = function(size, fill, encoding) {
-      if (typeof size !== "number") {
-        throw new TypeError("Argument must be a number");
-      }
-      var buf = Buffer2(size);
-      if (fill !== void 0) {
-        if (typeof encoding === "string") {
-          buf.fill(fill, encoding);
-        } else {
-          buf.fill(fill);
-        }
-      } else {
-        buf.fill(0);
-      }
-      return buf;
-    };
-    SafeBuffer.allocUnsafe = function(size) {
-      if (typeof size !== "number") {
-        throw new TypeError("Argument must be a number");
-      }
-      return Buffer2(size);
-    };
-    SafeBuffer.allocUnsafeSlow = function(size) {
-      if (typeof size !== "number") {
-        throw new TypeError("Argument must be a number");
-      }
-      return buffer.SlowBuffer(size);
-    };
-  }
-});
-
 // node_modules/string_decoder/lib/string_decoder.js
 var require_string_decoder = __commonJS({
   "node_modules/string_decoder/lib/string_decoder.js"(exports2) {
     "use strict";
-    var Buffer2 = require_safe_buffer2().Buffer;
+    var Buffer2 = require_safe_buffer().Buffer;
     var isEncoding = Buffer2.isEncoding || function(encoding) {
       encoding = "" + encoding;
       switch (encoding && encoding.toLowerCase()) {
@@ -50914,9 +50764,9 @@ var require_string_decoder = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/end-of-stream.js
+// node_modules/readable-stream/lib/internal/streams/end-of-stream.js
 var require_end_of_stream = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/end-of-stream.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/end-of-stream.js"(exports2, module2) {
     "use strict";
     var ERR_STREAM_PREMATURE_CLOSE = require_errors().codes.ERR_STREAM_PREMATURE_CLOSE;
     function once(callback) {
@@ -51015,9 +50865,9 @@ var require_end_of_stream = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/async_iterator.js
+// node_modules/readable-stream/lib/internal/streams/async_iterator.js
 var require_async_iterator = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/async_iterator.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/async_iterator.js"(exports2, module2) {
     "use strict";
     var _Object$setPrototypeO;
     function _defineProperty(obj, key, value) {
@@ -51200,9 +51050,9 @@ var require_async_iterator = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/from.js
+// node_modules/readable-stream/lib/internal/streams/from.js
 var require_from = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/from.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/from.js"(exports2, module2) {
     "use strict";
     function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
       try {
@@ -51326,9 +51176,9 @@ var require_from = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/_stream_readable.js
+// node_modules/readable-stream/lib/_stream_readable.js
 var require_stream_readable = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/_stream_readable.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/_stream_readable.js"(exports2, module2) {
     "use strict";
     module2.exports = Readable;
     var Duplex;
@@ -52122,9 +51972,9 @@ var require_stream_readable = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/_stream_transform.js
+// node_modules/readable-stream/lib/_stream_transform.js
 var require_stream_transform = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/_stream_transform.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/_stream_transform.js"(exports2, module2) {
     "use strict";
     module2.exports = Transform;
     var _require$codes = require_errors().codes;
@@ -52230,9 +52080,9 @@ var require_stream_transform = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/_stream_passthrough.js
+// node_modules/readable-stream/lib/_stream_passthrough.js
 var require_stream_passthrough = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/_stream_passthrough.js"(exports2, module2) {
     "use strict";
     module2.exports = PassThrough;
     var Transform = require_stream_transform();
@@ -52248,9 +52098,9 @@ var require_stream_passthrough = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/pipeline.js
+// node_modules/readable-stream/lib/internal/streams/pipeline.js
 var require_pipeline = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/lib/internal/streams/pipeline.js"(exports2, module2) {
+  "node_modules/readable-stream/lib/internal/streams/pipeline.js"(exports2, module2) {
     "use strict";
     var eos;
     function once(callback) {
@@ -52347,9 +52197,9 @@ var require_pipeline = __commonJS({
   }
 });
 
-// node_modules/duplexify/node_modules/readable-stream/readable.js
+// node_modules/readable-stream/readable.js
 var require_readable = __commonJS({
-  "node_modules/duplexify/node_modules/readable-stream/readable.js"(exports2, module2) {
+  "node_modules/readable-stream/readable.js"(exports2, module2) {
     var Stream = require("stream");
     if (process.env.READABLE_STREAM === "disable" && Stream) {
       module2.exports = Stream.Readable;
@@ -53651,7 +53501,7 @@ var require_streaming = __commonJS({
       StreamType2[StreamType2["SERVER_STREAMING"] = 1] = "SERVER_STREAMING";
       StreamType2[StreamType2["CLIENT_STREAMING"] = 2] = "CLIENT_STREAMING";
       StreamType2[StreamType2["BIDI_STREAMING"] = 3] = "BIDI_STREAMING";
-    })(StreamType = exports2.StreamType || (exports2.StreamType = {}));
+    })(StreamType || (exports2.StreamType = StreamType = {}));
     var StreamProxy = class extends duplexify {
       /**
        * StreamProxy is a proxy to gRPC-streaming method.
@@ -53969,7 +53819,7 @@ var require_package4 = __commonJS({
   "node_modules/google-gax/package.json"(exports2, module2) {
     module2.exports = {
       name: "google-gax",
-      version: "4.0.3",
+      version: "4.0.4",
       description: "Google API Extensions",
       main: "build/src/index.js",
       types: "build/src/index.d.ts",
@@ -53979,7 +53829,7 @@ var require_package4 = __commonJS({
         "!build/src/**/*.map"
       ],
       dependencies: {
-        "@grpc/grpc-js": "~1.8.0",
+        "@grpc/grpc-js": "~1.9.0",
         "@grpc/proto-loader": "^0.7.0",
         "@types/long": "^4.0.0",
         "abort-controller": "^3.0.0",
@@ -53987,16 +53837,16 @@ var require_package4 = __commonJS({
         "google-auth-library": "^9.0.0",
         "node-fetch": "^2.6.1",
         "object-hash": "^3.0.0",
-        "proto3-json-serializer": "^1.1.1",
-        protobufjs: "7.2.4",
+        "proto3-json-serializer": "^2.0.0",
+        protobufjs: "7.2.5",
         "retry-request": "^6.0.0"
       },
       devDependencies: {
         "@babel/plugin-proposal-private-methods": "^7.18.6",
-        "@compodoc/compodoc": "1.1.19",
+        "@compodoc/compodoc": "1.1.21",
         "@types/mocha": "^9.0.0",
         "@types/ncp": "^2.0.1",
-        "@types/node": "^18.0.0",
+        "@types/node": "^20.5.0",
         "@types/node-fetch": "^2.5.4",
         "@types/object-hash": "^3.0.0",
         "@types/proxyquire": "^1.3.28",
@@ -54006,22 +53856,22 @@ var require_package4 = __commonJS({
         c8: "^8.0.0",
         codecov: "^3.1.0",
         execa: "^5.0.0",
-        "google-proto-files": "^3.0.3",
-        gts: "^3.1.0",
+        "google-proto-files": "^4.0.0",
+        gts: "^5.0.0",
         linkinator: "^4.0.0",
         long: "^4.0.0",
         mkdirp: "^2.0.0",
         mocha: "^9.0.0",
         ncp: "^2.0.0",
         "null-loader": "^4.0.0",
-        "protobufjs-cli": "1.1.1",
+        "protobufjs-cli": "1.1.2",
         proxyquire: "^2.0.1",
         pumpify: "^2.0.0",
         rimraf: "^5.0.1",
         sinon: "^15.0.0",
         "stream-events": "^1.0.4",
         "ts-loader": "^8.0.0",
-        typescript: "^4.6.4",
+        typescript: "^5.1.6",
         "uglify-js": "^3.17.0",
         walkdir: "^0.4.0",
         webpack: "^4.0.0",
@@ -57308,8 +57158,7 @@ var require_text_to_speech_client = __commonJS({
        *     API remote host.
        * @param {gax.ClientConfig} [options.clientConfig] - Client configuration override.
        *     Follows the structure of {@link gapicConfig}.
-       * @param {boolean | "rest"} [options.fallback] - Use HTTP fallback mode.
-       *     Pass "rest" to use HTTP/1.1 REST API instead of gRPC.
+       * @param {boolean} [options.fallback] - Use HTTP/1.1 REST mode.
        *     For more information, please check the
        *     {@link https://github.com/googleapis/gax-nodejs/blob/main/client-libraries.md#http11-rest-api-mode documentation}.
        * @param {gax} [gaxInstance]: loaded instance of `google-gax`. Useful if you
@@ -57317,7 +57166,7 @@ var require_text_to_speech_client = __commonJS({
        *     HTTP implementation. Load only fallback version and pass it to the constructor:
        *     ```
        *     const gax = require('google-gax/build/src/fallback'); // avoids loading google-gax with gRPC
-       *     const client = new TextToSpeechClient({fallback: 'rest'}, gax);
+       *     const client = new TextToSpeechClient({fallback: true}, gax);
        *     ```
        */
       constructor(opts, gaxInstance) {
@@ -57360,7 +57209,7 @@ var require_text_to_speech_client = __commonJS({
         }
         if (!opts.fallback) {
           clientHeader.push(`grpc/${this._gaxGrpc.grpcVersion}`);
-        } else if (opts.fallback === "rest") {
+        } else {
           clientHeader.push(`rest/${this._gaxGrpc.grpcVersion}`);
         }
         if (opts.libName && opts.libVersion) {
@@ -57624,8 +57473,7 @@ var require_text_to_speech_long_audio_synthesize_client = __commonJS({
        *     API remote host.
        * @param {gax.ClientConfig} [options.clientConfig] - Client configuration override.
        *     Follows the structure of {@link gapicConfig}.
-       * @param {boolean | "rest"} [options.fallback] - Use HTTP fallback mode.
-       *     Pass "rest" to use HTTP/1.1 REST API instead of gRPC.
+       * @param {boolean} [options.fallback] - Use HTTP/1.1 REST mode.
        *     For more information, please check the
        *     {@link https://github.com/googleapis/gax-nodejs/blob/main/client-libraries.md#http11-rest-api-mode documentation}.
        * @param {gax} [gaxInstance]: loaded instance of `google-gax`. Useful if you
@@ -57633,7 +57481,7 @@ var require_text_to_speech_long_audio_synthesize_client = __commonJS({
        *     HTTP implementation. Load only fallback version and pass it to the constructor:
        *     ```
        *     const gax = require('google-gax/build/src/fallback'); // avoids loading google-gax with gRPC
-       *     const client = new TextToSpeechLongAudioSynthesizeClient({fallback: 'rest'}, gax);
+       *     const client = new TextToSpeechLongAudioSynthesizeClient({fallback: true}, gax);
        *     ```
        */
       constructor(opts, gaxInstance) {
@@ -57676,7 +57524,7 @@ var require_text_to_speech_long_audio_synthesize_client = __commonJS({
         }
         if (!opts.fallback) {
           clientHeader.push(`grpc/${this._gaxGrpc.grpcVersion}`);
-        } else if (opts.fallback === "rest") {
+        } else {
           clientHeader.push(`rest/${this._gaxGrpc.grpcVersion}`);
         }
         if (opts.libName && opts.libVersion) {
@@ -57688,7 +57536,7 @@ var require_text_to_speech_long_audio_synthesize_client = __commonJS({
           auth: this.auth,
           grpc: "grpc" in this._gaxGrpc ? this._gaxGrpc.grpc : void 0
         };
-        if (opts.fallback === "rest") {
+        if (opts.fallback) {
           lroOptions.protoJson = protoFilesRoot;
           lroOptions.httpRules = [];
         }
@@ -58061,8 +57909,7 @@ var require_text_to_speech_client2 = __commonJS({
        *     API remote host.
        * @param {gax.ClientConfig} [options.clientConfig] - Client configuration override.
        *     Follows the structure of {@link gapicConfig}.
-       * @param {boolean | "rest"} [options.fallback] - Use HTTP fallback mode.
-       *     Pass "rest" to use HTTP/1.1 REST API instead of gRPC.
+       * @param {boolean} [options.fallback] - Use HTTP/1.1 REST mode.
        *     For more information, please check the
        *     {@link https://github.com/googleapis/gax-nodejs/blob/main/client-libraries.md#http11-rest-api-mode documentation}.
        * @param {gax} [gaxInstance]: loaded instance of `google-gax`. Useful if you
@@ -58070,7 +57917,7 @@ var require_text_to_speech_client2 = __commonJS({
        *     HTTP implementation. Load only fallback version and pass it to the constructor:
        *     ```
        *     const gax = require('google-gax/build/src/fallback'); // avoids loading google-gax with gRPC
-       *     const client = new TextToSpeechClient({fallback: 'rest'}, gax);
+       *     const client = new TextToSpeechClient({fallback: true}, gax);
        *     ```
        */
       constructor(opts, gaxInstance) {
@@ -58113,7 +57960,7 @@ var require_text_to_speech_client2 = __commonJS({
         }
         if (!opts.fallback) {
           clientHeader.push(`grpc/${this._gaxGrpc.grpcVersion}`);
-        } else if (opts.fallback === "rest") {
+        } else {
           clientHeader.push(`rest/${this._gaxGrpc.grpcVersion}`);
         }
         if (opts.libName && opts.libVersion) {
@@ -58377,8 +58224,7 @@ var require_text_to_speech_long_audio_synthesize_client2 = __commonJS({
        *     API remote host.
        * @param {gax.ClientConfig} [options.clientConfig] - Client configuration override.
        *     Follows the structure of {@link gapicConfig}.
-       * @param {boolean | "rest"} [options.fallback] - Use HTTP fallback mode.
-       *     Pass "rest" to use HTTP/1.1 REST API instead of gRPC.
+       * @param {boolean} [options.fallback] - Use HTTP/1.1 REST mode.
        *     For more information, please check the
        *     {@link https://github.com/googleapis/gax-nodejs/blob/main/client-libraries.md#http11-rest-api-mode documentation}.
        * @param {gax} [gaxInstance]: loaded instance of `google-gax`. Useful if you
@@ -58386,7 +58232,7 @@ var require_text_to_speech_long_audio_synthesize_client2 = __commonJS({
        *     HTTP implementation. Load only fallback version and pass it to the constructor:
        *     ```
        *     const gax = require('google-gax/build/src/fallback'); // avoids loading google-gax with gRPC
-       *     const client = new TextToSpeechLongAudioSynthesizeClient({fallback: 'rest'}, gax);
+       *     const client = new TextToSpeechLongAudioSynthesizeClient({fallback: true}, gax);
        *     ```
        */
       constructor(opts, gaxInstance) {
@@ -58429,7 +58275,7 @@ var require_text_to_speech_long_audio_synthesize_client2 = __commonJS({
         }
         if (!opts.fallback) {
           clientHeader.push(`grpc/${this._gaxGrpc.grpcVersion}`);
-        } else if (opts.fallback === "rest") {
+        } else {
           clientHeader.push(`rest/${this._gaxGrpc.grpcVersion}`);
         }
         if (opts.libName && opts.libVersion) {
@@ -58441,7 +58287,7 @@ var require_text_to_speech_long_audio_synthesize_client2 = __commonJS({
           auth: this.auth,
           grpc: "grpc" in this._gaxGrpc ? this._gaxGrpc.grpc : void 0
         };
-        if (opts.fallback === "rest") {
+        if (opts.fallback) {
           lroOptions.protoJson = protoFilesRoot;
           lroOptions.httpRules = [];
         }
@@ -72787,6 +72633,27 @@ async function convertTextToSpeech(inputText) {
    * See the License for the specific language governing permissions and
    * limitations under the License.
    *
+   *)
+
+long/umd/index.js:
+  (**
+   * @license
+   * Copyright 2009 The Closure Library Authors
+   * Copyright 2020 Daniel Wirtz / The long.js Authors.
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *     http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   *
+   * SPDX-License-Identifier: Apache-2.0
    *)
 
 @grpc/proto-loader/build/src/index.js:
