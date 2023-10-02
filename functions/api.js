@@ -8,8 +8,8 @@ import serverless from 'serverless-http';
 const app = express();
 const router = Router();
 // view engine setup
-// app.set('views', path.join(__dirname, './views')); 
-app.set('views', './views');
+app.set('views', path.join(__dirname, 'views')); 
+// app.set('views', './views');
 app.set('view engine', 'ejs');
 app.engine('ejs', require('ejs').__express);
 
