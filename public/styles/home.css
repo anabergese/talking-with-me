@@ -78,7 +78,7 @@ body {
     }
 
     #gifContainer img {
-      bottom: 357px;
+      bottom: 324px;
       right: 9px;
       width: 90%;
     }
@@ -86,4 +86,8 @@ body {
     #recording_audio_gif{
       width: 80px; 
      }
+
+     #backgroundVideo {
+      height: 95vh;
+    }  
   }
