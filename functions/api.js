@@ -1,24 +1,13 @@
-import express, { Router } from 'express';
+import express from 'express';
 import multer from 'multer';
 import { convertSpeechToText } from './speechToText.js';
 import { processTranscription } from './gptProcessing.js';
 import {convertTextToSpeech} from './textToVoice.js'
-import serverless from 'serverless-http';
 
 const app = express();
-const router = Router();
+const PORT = process.env.PORT || 8080;
 
-let path = require('path');
-app.set("views", path.join(__dirname, "..", "views"));
-// app.set('views', './views');
-app.set('view engine', 'ejs');
-app.engine('ejs', require('ejs').__express);
-
-
-//app.set('view engine', 'ejs'); // Set EJS as the view engine
-//app.set('views', './views'); // Set the views directory (update to your actual directory)
-
-router.use(express.static('public'));
+app.use(express.static('public'));
 
 const storage = multer.diskStorage({
   destination: './',
@@ -29,7 +18,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-router.get('/', (req, res) => {
+app.get('/', (req, res) => {
   const html = `
   <!DOCTYPE html>
   <html lang="en">
@@ -65,13 +54,13 @@ router.get('/', (req, res) => {
   </body>
   </html>
   `
-  res.render("index");
+  res.render("index.ejs");
 
 });
 
-router.get('/hello', (req, res) => res.send('Hello World!'));
+app.get('/hello', (req, res) => res.send('Hello World!'));
 
-router.post('/upload', upload.single('audio'), async (req, res) => {
+app.post('/upload', upload.single('audio'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No audio file received' });
   }
@@ -104,6 +93,6 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
 
 });
 
-app.use('/.netlify/functions/api', router);
-
-export const handler = serverless(app);
+app.listen(PORT, () => {
+  console.log(`API RUNNING ON PORT ${PORT}`);
+});
