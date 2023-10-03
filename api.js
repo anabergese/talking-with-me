@@ -19,41 +19,7 @@ const upload = multer({ storage });
 
 
 app.get('/', (req, res) => {
-  const html = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/styles/home.css">
-  <title>Audio Recording</title>
-  </head>
-  <body>
-  <div id="app">
-    <video autoplay muted id="backgroundVideo">
-      <source src="/images/background_desktop.mp4" type="video/mp4">
-      Your browser does not support the video tag
-    </video>
-    <div id="gifContainer">
-      <img src="/images/myself.svg" alt="myself">  
-      <img src="/images/clone.gif" style="display: none;" id="talking_gif" alt="myself talking">
-      <img src="/images/processing_input.gif" style="display: none;" id="processing_input" alt="processing audio"> 
-    </div> 
-    <div id="controls">
-      <button id="startRecording">
-        <img src="/images/mic.svg" id="mic_icon" alt="microphone icon">
-      </button>
-      <button id="stopRecording">
-        <img src="/images/stop.svg" alt="stop button icon">
-      </button>
-    </div>
-  </div>
-  <div id="audioContainer">    
-  </div>
-  <script src="/scripts/script.js"></script>
-  </body>
-  </html>
-  `
+ 
   res.render("index.ejs");
 
 });

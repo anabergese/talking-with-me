@@ -90,4 +90,8 @@ body {
      #backgroundVideo {
       height: 95vh;
     }  
+
+    #processing_input{
+      bottom: 100px !important;
+    }
   }
