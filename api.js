@@ -1,8 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-import { convertSpeechToText } from './speechToText.js';
-import { processTranscription } from './gptProcessing.js';
-import {convertTextToSpeech} from './textToVoice.js'
+import { convertSpeechToText } from '././functions/speechToText.js';
+import { processTranscription } from '././functions/gptProcessing.js';
+import {convertTextToSpeech} from '././functions/textToVoice.js'
 
 const app = express();
 const PORT = process.env.PORT || 8080;
