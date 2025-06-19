@@ -17,7 +17,7 @@ body {
   #gifContainer img {
     opacity: 0.90;
     position: absolute;
-    bottom: 400px;
+    bottom: 380px;
     right: 128px;
     width: 28%;
     image-rendering: pixelated;
