@@ -17,9 +17,9 @@ body {
   #gifContainer img {
     opacity: 0.90;
     position: absolute;
-    bottom: 333px;
-    right: 70px;
-    width: 35%;
+    bottom: 400px;
+    right: 128px;
+    width: 28%;
     image-rendering: pixelated;
   }
 
@@ -48,23 +48,23 @@ body {
     height: 50px;
   }
 
-   #recording_audio_gif{
+  #recording_audio_gif{
     width: 200px; 
     /* background-color: #21EF80; */
     animation-duration: 10s;
     border-radius: 50px;
-   }
+  }
 
-     /* REVIEW THIS CLASS: */
+  /* REVIEW THIS CLASS: */
   .disable, svg:hover {
     filter: brightness(0.5);
-   }
+  }
 
-   .hiden{
+  .hiden{
     visibility: hidden;
   }
 
-   @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 600px) {
     /* MOBILES */
     #app{
       display: flex;
@@ -85,9 +85,9 @@ body {
 
     #recording_audio_gif{
       width: 80px; 
-     }
+    }
 
-     #backgroundVideo {
+    #backgroundVideo {
       height: 95vh;
     }  
 
