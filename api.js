@@ -19,9 +19,7 @@ const upload = multer({ storage });
 
 
 app.get('/', (req, res) => {
- 
   res.render("index.ejs");
-
 });
 
 app.get('/hello', (req, res) => res.send('Hello World!'));
@@ -51,7 +49,6 @@ app.post('/upload', upload.single('audio'), async (req, res) => {
         transcriptionresult: transcriptionResult,
         audiocontent: audioTag
       });
-       
   } catch (error) {
     console.error('Error processing audio:', error);
     res.status(500).json({ message: 'Error processing audio' });
