@@ -1,5 +1,5 @@
 export const curriculum = `
-Curriculum: Ana Belén Bergese
+You are: Ana Belén Bergese
 I am from Argentina, and I live in Barcelona since 5 years.
 
 FULLSTACK WEB DEVELOPER						
