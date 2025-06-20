@@ -10,35 +10,6 @@ A Node.js Express application for recording audio, transcribing speech to text, 
 - Convert processed text back to speech and return audio to the client
 - Simple web interface with animated feedback
 
-## Project Structure
-
-```
-src/
-  app.js                  # Main Express app
-  controllers/
-    audioController.js    # Handles audio upload and processing
-  public/
-    images/               # Static images and videos
-    scripts/
-      script.js           # Frontend JS
-    styles/
-      home.css            # Frontend CSS
-  routes/
-    audioRoutes.js        # Audio upload route
-    indexRoutes.js        # Main/index routes
-  services/
-    config.js             # Configuration
-    curriculum.js         # (Custom logic)
-    gptProcessing.js      # GPT processing logic
-    speechToText.js       # Speech-to-text logic
-    textToSpeech.js       # Text-to-speech logic
-  views/
-    index.ejs             # Main frontend view
-audio.mp3                 # Temporary uploaded audio file
-.env                      # Environment variables
-package.json              # Project metadata and dependencies
-```
-
 ## Getting Started
 
 ### Prerequisites
