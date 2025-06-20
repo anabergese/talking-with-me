@@ -1,4 +1,4 @@
-import { keyElevenLab } from './config.js'; 
+import { keyElevenLab } from '../config.js'; 
 import axios from 'axios';
 
 async function convertTextToSpeech(inputText) {

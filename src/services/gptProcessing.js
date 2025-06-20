@@ -1,4 +1,4 @@
-import { openai } from './config.js'; 
+import { openai } from '../config.js'; 
 import { curriculum } from './curriculum.js';
 
 export async function processTranscription(transcriptionResult){

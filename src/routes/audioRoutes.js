@@ -4,7 +4,6 @@ import { handleAudioUpload } from '../controllers/audioController.js';
 
 const router = express.Router();
 
-// Configura multer aquí si solo se usa en estas rutas
 const storage = multer.diskStorage({
   destination: './',
   filename: (req, file, cb) => cb(null, 'audio.mp3'),

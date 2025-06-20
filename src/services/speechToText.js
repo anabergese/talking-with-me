@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { openai } from './config.js'; 
+import { openai } from '../config.js'; 
 
 export async function convertSpeechToText(){
   console.log("Converting speech to text...");
