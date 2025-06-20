@@ -2,11 +2,11 @@
   "name": "text-to-speech-express",
   "version": "1.0.0",
   "description": "",
-  "main": "api.js",
+  "main": "app.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon api.js"
+    "start": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
