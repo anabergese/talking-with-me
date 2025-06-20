@@ -63,35 +63,3 @@ body {
   .hiden{
     visibility: hidden;
   }
-
-  @media only screen and (max-width: 600px) {
-    /* MOBILES */
-    #app{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #controls{
-      margin-top: 80vh;
-      margin-left: 0;
-    }
-
-    #gifContainer img {
-      bottom: 304px;
-      right: 9px;
-      width: 90%;
-    }
-
-    #recording_audio_gif{
-      width: 80px; 
-    }
-
-    #backgroundVideo {
-      height: 95vh;
-    }  
-
-    #processing_input{
-      bottom: 100px !important;
-    }
-  }
