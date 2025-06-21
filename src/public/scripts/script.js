@@ -92,8 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         mediaRecorder.start();
         startButton.disabled = true;
-        stopButton.style.visibility = "visible";
-       
       } catch (error) {
         console.error('Error accessing microphone:', error);
       }
@@ -107,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaRecorder.stop();
         startButton.disabled = false;
         stopButton.disabled = false;
-        stopButton.classList.add("disable");
         recording_audio_gif.classList.add("hiden");   
       }
     });
