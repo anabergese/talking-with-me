@@ -41,4 +41,4 @@ node_modules
 .pnp.*
 
 # Multer uploaded files (ej: audio.mp3 temp file)
-audio.mp3
+audio.mp3node_modules/
